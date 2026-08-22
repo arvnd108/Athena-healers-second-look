@@ -1,4 +1,12 @@
-# Architecture
+# Architecture (current implementation)
+
+> **This describes the tier-based system as it's built today** — Tier 1
+> evidence retrieval gating Tier 2 structural prediction, plus an unbuilt
+> frontend/orchestration layer. It is **not** the target design. See root
+> [`ARCHITECTURE.md`](../ARCHITECTURE.md) for the direction the codebase is
+> moving toward — a single signal graph with no tier gating one path on
+> another's failure — and its §2 for exactly which modules below already
+> satisfy that design unchanged versus which need re-wiring.
 
 ## System overview
 

@@ -451,6 +451,41 @@ def test_playwright_timeout_raises_timeout_error():
         client.submit(pdb_code="2Z4O", pdb_text=None, mutation="D30N", chain="A", lig_id="065")
 
 
+def test_het_resolver_survives_a_chemcomp_lookup_failure_without_nameerror():
+    # Regression: StructureHetResolver.resolve() catches RcsbError around the
+    # per-HET-code chemcomp lookup, but RcsbError was never imported at module
+    # scope in binding.py — only RcsbPdbClient was, and only lazily inside the
+    # `client is None` branch. The bare name in `except RcsbError:` resolved to
+    # nothing, so a real RCSB failure during resolution raised NameError instead
+    # of being handled — crashing exactly during the outage this was meant to
+    # tolerate. Assert it degrades to "no match" instead of raising.
+    from secondlook.binding import StructureHetResolver
+    from secondlook.rcsb import RcsbError
+    from secondlook.structure import StructureResult
+
+    class RaisingChemCompClient:
+        def fetch_chem_comp(self, code):
+            raise RcsbError(f"simulated RCSB outage for {code}")
+
+    structure = StructureResult(
+        status="found",
+        source="rcsb",
+        id="2Z4O",
+        plddt_at_residue=None,
+        plddt_global=None,
+        reliability_flag=None,
+        ligand_bound=True,
+        annotated_position=None,
+        pdb_text="HETATM    1  C1  065 A 200      0.000   0.000   0.000  1.00 20.00           C\n",
+    )
+    resolver = StructureHetResolver(chem_comp_client=RaisingChemCompClient())
+    resolver._candidate_smiles = "CCO"
+
+    result = resolver.resolve("SOME DRUG", structure)
+
+    assert result is None
+
+
 @pytest.mark.integration
 def test_live_mcsm_lig_example_d30n_2z4o():
     from secondlook.mcsm_lig import McsmLigPlaywrightClient

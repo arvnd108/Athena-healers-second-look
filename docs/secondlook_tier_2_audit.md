@@ -1,5 +1,19 @@
 # SecondLook Tier 2 Engineering & Scientific Audit — Missense→Small-Molecule Binding Plausibility Signal
 
+> **Status since this audit was written.** Landed: the covalent-inhibitor
+> mechanism gate (`src/secondlook/covalent.py`, Trap #1) and InChIKey ligand
+> identity (`src/secondlook/ligand_identity.py`, Trap #8). Still open, not yet
+> built: SIFTS residue mapping (Trap #4 — also tracked in `../ISSUES.md` §10,
+> partially mitigated there by a residue-identity check), post-mutation local
+> minimization (Trap #5), and the PAINS/BRENK candidate filter (Trap #9) — the
+> latter two have no tracking entry anywhere else, so this file is still the
+> authoritative source for them. Recommendation #2's 70%-threshold gate and
+> the "lead with proximity" default (Recommendation #3) were both later
+> validated for real: the binding-delta claim failed 0/9, and the proximity
+> fallback itself was pre-committed and evaluated at 7/8 (see
+> `validation-plan.md` and `validation/results.md`) — this audit predicted
+> that outcome before either run happened.
+
 ## Summary
 - The Tier 2 claim is defensible ONLY as a narrow, explicitly-hedged computational plausibility signal ("this substitution is/isn't near, and may perturb, the modeled small-molecule binding site"), and must NOT be presented as a resistance/sensitivity prediction — because the pipeline's core assumption (rigid-receptor docking on a wild-type structure detects binding change) fails on the majority of your own nine validation cases, several of which cause resistance through *conformational-equilibrium shifts*, not local steric change at the drug contact.
 - Two traps are V1 blockers that will produce scientifically wrong output if shipped as-is: (1) covalent inhibitors (osimertinib, and the C797S case) scored by non-covalent Vina/mCSM-lig, and (2) direct UniProt→PDB residue numbering without SIFTS mapping. Both must be gated/fixed before any demo.

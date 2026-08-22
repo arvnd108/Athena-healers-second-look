@@ -8,6 +8,7 @@ from typing import Literal, Protocol
 
 from secondlook.candidates import DrugCandidate
 from secondlook.mutation_validation import MutationValidationResult
+from secondlook.rcsb import RcsbError
 from secondlook.structure import StructureResult, structure_unavailable_message
 
 # Distinct from structure_unavailable_message(): that one specifically claims the

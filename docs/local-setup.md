@@ -1,6 +1,10 @@
 # Local Setup (macOS, Apple Silicon)
 
-Verified working on macOS 26 / arm64, Python 3.11.16, on 2026-08-21 — full suite 83/83 passing including live integration tests.
+Verified working on macOS 26 / arm64, Python 3.13, on 2026-08-22, following this
+procedure exactly (including the patched Vina build in §4) — full unit suite
+549/549 passing, `vina`/`meeko`/`rdkit`/`pdbfixer`/`sentence-transformers` all
+import cleanly. Integration tests (live services) were not re-run as part of
+that check.
 
 `tech-stack-setup.md` covers stack *choices*; this file covers the concrete install hurdles on Apple Silicon, all of which are non-obvious and cost real time to rediscover. Three dependencies do not install cleanly from `pip install -e ".[dev]"` alone.
 
@@ -79,15 +83,15 @@ Verify:
 ## 5. Running tests
 
 ```bash
-.venv/bin/python -m pytest                # 72 unit tests, offline, ~2s (default)
-.venv/bin/python -m pytest -m integration  # 11 live-service tests
-.venv/bin/python -m pytest -m ""           # all 83 (~2m50s) — INCLUDES live network calls
+.venv/bin/python -m pytest                # 549 unit tests, offline (default)
+.venv/bin/python -m pytest -m integration  # 55 live-service tests
+.venv/bin/python -m pytest -m ""           # all 603 — INCLUDES live network calls
 ```
 
-Integration tests are **opt-in**, via `addopts = "-m 'not integration'"` in `pyproject.toml`, matching `tier2-implementation-spec.md` §3. A command-line `-m` overrides that `addopts` entry, so `-m integration` selects exactly the live tests and `-m ""` clears the filter entirely.
+Integration tests are **opt-in**, via `addopts = "-m 'not integration'"` in `pyproject.toml`. A command-line `-m` overrides that `addopts` entry, so `-m integration` selects exactly the live tests and `-m ""` clears the filter entirely.
 
-This matters beyond speed: the 11 integration tests hit Ensembl VEP, RCSB, AlphaFold DB, DGIdb, PubChem, and the **shared mCSM-lig academic server** — which has no documented rate limit and should not be hit casually on every local test run.
+This matters beyond speed: the integration tests hit Ensembl VEP, RCSB, AlphaFold DB, DGIdb, PubChem, and the **shared mCSM-lig academic server** — which has no documented rate limit and should not be hit casually on every local test run.
 
 ## Version note
 
-`pyproject.toml` specifies `vina>=1.2.7` and `meeko>=0.7.1`, while `tier2-implementation-spec.md` §3 specifies exact pins (`vina ==1.2.7`, `meeko ==0.7.1`). Installed here: vina 1.2.7, meeko 0.7.1 — consistent with both. Worth reconciling the two documents.
+`pyproject.toml` pins `vina>=1.2.7` and `meeko>=0.7.1`. Installed here: vina 1.2.7, meeko 0.7.1.

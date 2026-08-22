@@ -10,28 +10,36 @@ patient's gene, mutation and cancer type, Athena answers two questions:
    to a candidate drug's binding pocket.
 
 Tier 1 runs first. Only when it finds nothing strong does Tier 2 run — so a
-computed signal never displaces real evidence.
+computed signal never displaces real evidence. **That two-tier split is the
+current implementation, not the intended end state** — see
+[`ARCHITECTURE.md`](ARCHITECTURE.md) for the target design (one signal graph
+across target discovery, therapy modality, access pathway, and evidence, with
+no tier gating one path on another's failure) and §2 there for exactly which
+of today's modules already carry over unchanged.
 
 > **Before you demo this, read [`ISSUES.md`](ISSUES.md) §1.** The pipeline runs
 > end to end, but it does **not** currently produce a validated binding-change
-> prediction. On all nine gold-standard cases it returns binding-site
-> *proximity* only. That is a documented, intended fallback — not a crash — but
-> it must be described accurately.
+> prediction, and its documented fallback — binding-site *proximity* — has
+> since been evaluated against a pre-committed criterion and also did not pass
+> cleanly (7/8 non-ambiguous cases; see `validation/results.md`'s "Proximity
+> criterion evaluation" section). Neither result is a bug to hide — both are
+> honestly reported, pre-committed evaluations. Describe them as what they are.
 
 ---
 
 ## Quick start
 
 ```bash
-git clone https://github.com/KrishG7/Athena.git
-cd Athena
+cd athena_ultimate
 python3.11 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
-pytest                                    # 538 tests, ~10s, fully offline
+pytest                                    # 549 tests, ~10s, fully offline
 ```
 
-If that prints `538 passed`, the project is working. Everything below is for
-running the parts that need live services.
+If that prints `549 passed`, the project is working. Everything below is for
+running the parts that need live services. This repo has no remote configured
+yet — set one before treating any `git clone`/push instructions elsewhere as
+applicable here.
 
 ---
 
@@ -132,13 +140,13 @@ Integration tests hit live services and a running FalkorDB. They're
 down.
 
 ```bash
-pytest                       # 538 unit tests, offline    -> expect "538 passed"
+pytest                       # 549 unit tests, offline    -> expect "549 passed"
 pytest -m integration        # live services + FalkorDB   -> expect ~33 passed
 pytest tests/tier1           # Tier 1 only
 pytest tests/test_pipeline.py -v
 ```
 
-**Expected: 538 passing, 0 failures.** Anything else is a regression — do not
+**Expected: 549 passing, 0 failures.** Anything else is a regression — do not
 demo until it's green.
 
 ---
@@ -296,7 +304,7 @@ src/secondlook/
 ├── validation.py        Gold-standard harness, pre-committed criteria
 └── tier1/               Tier 1 — CIViC loader, retrieval Modes 1-3, graph schema
 
-tests/                   538 unit tests (tests/tier1/ for Tier 1)
+tests/                   549 unit tests (tests/tier1/ for Tier 1)
 validation/              Gold-standard runner and results
 docs/                    Specs, setup guides, research notes
 ISSUES.md                Every known problem and its candidate fix
@@ -304,9 +312,9 @@ ISSUES.md                Every known problem and its candidate fix
 
 | Doc | Covers |
 |---|---|
-| [`ISSUES.md`](ISSUES.md) | **Every known problem, cause, and fix. Read before presenting.** |
-| [`docs/checkpoint.md`](docs/checkpoint.md) | Living build log — read to pick up work mid-stream |
-| [`docs/architecture.md`](docs/architecture.md) | System architecture, both tiers |
+| [`ARCHITECTURE.md`](ARCHITECTURE.md) | **The target design — read this first.** Why the tier split is going away, what carries over unchanged, build order. |
+| [`ISSUES.md`](ISSUES.md) | Every known problem, cause, and fix in the *current* implementation. Read before presenting. |
+| [`docs/architecture.md`](docs/architecture.md) | System architecture of the *current* tier-based implementation (frontend/backend/Tier 1/Tier 2) |
 | [`docs/validation-plan.md`](docs/validation-plan.md) | Pre-committed pass/fail criteria |
 | [`docs/local-setup.md`](docs/local-setup.md) | macOS install hurdles |
 | [`docs/briefing/`](docs/briefing/) | Standalone explanation of the method and its limits |
@@ -318,4 +326,3 @@ ISSUES.md                Every known problem and its candidate fix
 **Never state a medical fact that was not retrieved or computed in a traceable
 step.** Every claim carries its citation or its method. No exceptions — this is
 what separates Athena from a chatbot that sounds confident.
-# Athena

@@ -13,13 +13,14 @@ you can take one without reading the rest.
 | Area | State |
 |---|---|
 | Both tiers install and import as one package | Working |
-| 538 unit tests | Passing, 0 failures |
+| 549 unit tests | Passing, 0 failures |
 | Tier 1 retrieval Modes 1 & 2 against live CIViC graph | Working |
 | Tier 1 → Tier 2 activation handoff | Verified live |
 | Tier 2 → graph writes, full traversal | Verified live |
 | WT-vs-mutant docking runs end to end | Verified (2Z4O D130N) |
 | Binding-site proximity, reproducible | All 9 cases exact on re-run |
 | **Validated binding-change prediction** | **0/9 — see §1** |
+| **Proximity fallback criterion, pre-committed + evaluated** | **FAIL — 7/8 non-ambiguous, EGFR C797S misses — see §1** |
 | Labeling calibration | `provisional`, blocked on §2 |
 | 3 of 9 cases blocked by receptor-prep bug | §2 |
 | Trial source (ClinicalTrials.gov / CTRI) | Not built — §5 |
@@ -30,7 +31,7 @@ you can take one without reading the rest.
 | If you have | Work on |
 |---|---|
 | Half a day and want the biggest scientific win | **§2** — the meeko fix. Takes scoreable cases from 2 to 5. |
-| A day and want the project defensible | **§1** — pre-commit the proximity criterion and evaluate it |
+| A day and want the honest headline framing sorted out | **§1** — the proximity criterion is now pre-committed and evaluated (result: FAIL, 7/8); decide how to present two honestly-negative results without either burying them or overstating what §2's fix would change |
 | Backend/API interest | **§5** — build the ClinicalTrials.gov loader |
 | ML interest | **§12 step 5** — MdrDB training run |
 
@@ -95,9 +96,17 @@ Critical methodological rule:
   is fitting the test to the data, and `docs/validation-plan.md` forbids it in
   writing.
 - You **may** pre-commit a *new* criterion for the *new, narrower* claim —
-  written down **before** running it. For example: *"separates contact-mediated
-  from distant mechanisms at a 5 Å cutoff across all nine cases."* Current data
-  suggests that passes, but write it down first or it doesn't count.
+  written down **before** running it. **This has since been done and
+  evaluated** (`docs/validation-plan.md` "Binding-site proximity fallback —
+  pre-committed criterion", evaluated in `validation/results.md`): does the
+  proximity signal correctly separate contact-mediated from non-contact
+  mechanisms across the gold-standard cases that have a clean mechanism
+  label. **Result: FAIL** — 7/8 non-ambiguous cases matched, one (EGFR
+  C797S/osimertinib) did not, one (ALK I1171T) excluded as ambiguous. Per the
+  pre-committed wording, a partial match is a fail and is reported as one, not
+  rounded up. So the proximity fallback is **not** currently a claim you can
+  make either — it is an honestly-measured, honestly-evaluated result that
+  happens to say "not yet," same as the binding-delta claim above.
 
 ---
 
@@ -274,6 +283,15 @@ Every failure mode above is structurally impossible here.
 | `KrishG7/Athena_tier_2` | Superseded by this repo. History preserved. |
 | `KrishG7/Athena_Tier_1` | Fork of Gagan's, with the §8a schema fix. Superseded. |
 | `Gagansharma-code/Athena_Tier_1` | **Still has the §8a bug.** Gagan should take the fix. |
+
+**One more layer, since this file was originally written for the `Athena`
+repo and now lives in `athena_ultimate`:** this repo is a further
+consolidation on top of `Athena` — same code (plus a handful of fixes ported
+from the pre-merge `athena_tier_2`, see root `ARCHITECTURE.md` §2), reset to
+a single fresh git history with no upstream cross-repo dependency at all. If
+you have a clone of `Athena`, `athena_tier_2`, or `athena_Tier_1`, this repo
+supersedes all three the same way `Athena` superseded the two-repo split
+below.
 
 If you have an old clone, switch to this repo. If you're Gagan: the
 `StructuralSignal` schema fix in §8a should land in your repo too, or anyone
