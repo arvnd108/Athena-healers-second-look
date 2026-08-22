@@ -1,0 +1,27 @@
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.DS_Store
+dist/
+build/
+
+# Locally-built wheels (vina needs a source build on macOS arm64 —
+# see docs/local-setup.md)
+wheels/
+
+# Local-only upstream clones kept for reading
+reference_repos/
+
+# Third-party datasets. MdrDB in particular is licensed academic-use-only and
+# NON-TRANSFERABLE — it must never be committed or redistributed. See ISSUES.md.
+data/
+MdrDB/
+*.tsv
+
+# Validation cache: real pipeline runs, regenerable with
+# `python validation/run_gold_standard.py`. Committed demo payloads are the
+# exception — force-add those deliberately.
+validation/cache/

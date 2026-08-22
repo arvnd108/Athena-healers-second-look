@@ -1,0 +1,359 @@
+# Ground-truth eval set for Tier 1 retrieval Modes 1-3.
+#
+# Every pair is sourced from data that is actually loaded in the live
+# graph (Phases 2/3/5) -- confirmed live via direct Cypher queries before
+# writing this file, never hand-written/fictional data points. The one
+# deliberate exception is the `gene` field on mode2_path_b pairs: those
+# name REAL, clinically documented genes/fusions that are correctly
+# ABSENT from this repo's narrow 17-disease CIViC scope -- that absence is
+# the entire point of the test (Mode 1/path (a) must find nothing for
+# them; only disease+drug_class relaxation should).
+#
+# config_version exists so a re-load of the graph with different scope
+# can invalidate this file's assumptions explicitly rather than silently.
+#
+# Total: 22 pairs. NOT ~50 -- the master spec's "~50-pair" target assumes
+# a broader load than this repo's current 46-evidence-item / 5-publication
+# scope actually supports without inventing data. Every bucket below uses
+# its full honest real-data ceiling (e.g. exactly the 4 variants with
+# hgvs_p exist; exactly 5 genes have more than one loaded variant) rather
+# than being padded with duplicates or fabricated cases to hit a round
+# number. Flagged explicitly, not silently under-delivered.
+#
+# Schema per pair:
+#   id                       short stable identifier
+#   bucket                   mode1_exact | mode1_exact_negative |
+#                            mode2_path_a | mode2_path_b | mode3_semantic
+#   gene                     Gene.symbol as loaded (or, for mode2_path_b,
+#                            a real gene/fusion NOT in this graph)
+#   key_type                 "hgvs_p" | "variant_name" | null (mode3 only)
+#   key_value                the hgvs_p or variant_name string to query
+#   disease                  Disease.name, only used by mode2_path_b
+#   drug_class               Drug.drug_class, only used by mode2_path_b
+#   query_text               free-text query, mode3_semantic only
+#   expected_mode            "exact" | "relaxed" | "semantic" | "none"
+#                            ("none" = a negative case, expect zero items)
+#   expected_relaxation_type "same_gene_different_variant" |
+#                            "same_disease_drug_class" | null
+#   expected_citation_id     civic_id (mode1/mode2) or pmid (mode3) as a
+#                            string, or null for a negative case
+#   notes                    why this pair was chosen
+
+config_version: 1
+
+pairs:
+  # --- mode1_exact: all 4 variants in the graph that carry hgvs_p -------
+  - id: exact-fgfr1-n546k
+    bucket: mode1_exact
+    gene: FGFR1
+    key_type: hgvs_p
+    key_value: "NP_075598.2:p.Asn546Lys"
+    disease: null
+    drug_class: null
+    query_text: null
+    expected_mode: exact
+    expected_relaxation_type: null
+    expected_citation_id: "1246"
+    notes: real loaded hgvs_p variant; Ponatinib sensitivity (civic_id 1246)
+
+  - id: exact-kdr-a1065t
+    bucket: mode1_exact
+    gene: KDR
+    key_type: hgvs_p
+    key_value: "NP_002244.1:p.Ala1065Thr"
+    disease: null
+    drug_class: null
+    query_text: null
+    expected_mode: exact
+    expected_relaxation_type: null
+    expected_citation_id: "1106"
+    notes: real loaded hgvs_p variant; Sunitinib/Sorafenib sensitivity
+
+  - id: exact-ptprd-v253i
+    bucket: mode1_exact
+    gene: PTPRD
+    key_type: hgvs_p
+    key_value: "NP_002830.1:p.Val253Ile"
+    disease: null
+    drug_class: null
+    query_text: null
+    expected_mode: exact
+    expected_relaxation_type: null
+    expected_citation_id: "1856"
+    notes: real loaded hgvs_p variant; Cixutumumab/Teprotumumab sensitivity
+
+  - id: exact-tp53-r273h
+    bucket: mode1_exact
+    gene: TP53
+    key_type: hgvs_p
+    key_value: "NP_000537.3:p.Arg273His"
+    disease: null
+    drug_class: null
+    query_text: null
+    expected_mode: exact
+    expected_relaxation_type: null
+    expected_citation_id: "7430"
+    notes: real loaded hgvs_p variant; Doxorubicin/Methotrexate resistance
+
+  # --- mode1_exact_negative: real gene, real mutation, never loaded -----
+  - id: exact-neg-tp53-r175h
+    bucket: mode1_exact_negative
+    gene: TP53
+    key_type: hgvs_p
+    key_value: "NP_000537.3:p.Arg175His"
+    disease: null
+    drug_class: null
+    query_text: null
+    expected_mode: none
+    expected_relaxation_type: null
+    expected_citation_id: null
+    notes: >-
+      TP53 IS loaded (via R273H), but this different, real, well-known
+      hotspot mutation was never fetched -- Mode 1 must return empty, not
+      substitute the nearest loaded variant.
+
+  - id: exact-neg-fgfr1-k650e
+    bucket: mode1_exact_negative
+    gene: FGFR1
+    key_type: hgvs_p
+    key_value: "NP_075598.2:p.Lys650Glu"
+    disease: null
+    drug_class: null
+    query_text: null
+    expected_mode: none
+    expected_relaxation_type: null
+    expected_citation_id: null
+    notes: FGFR1 is loaded (via N546K); this real FGFR1 hotspot was not.
+
+  - id: exact-neg-kdr-t771r
+    bucket: mode1_exact_negative
+    gene: KDR
+    key_type: variant_name
+    key_value: T771R
+    disease: null
+    drug_class: null
+    query_text: null
+    expected_mode: none
+    expected_relaxation_type: null
+    expected_citation_id: null
+    notes: variant_name-keyed negative case (not just hgvs_p-keyed).
+
+  # --- mode2_path_a: all 5 genes with more than one loaded variant ------
+  - id: relaxed-a-fgfr1
+    bucket: mode2_path_a
+    gene: FGFR1
+    key_type: hgvs_p
+    key_value: "NP_075598.2:p.Asn546Thr"
+    disease: null
+    drug_class: null
+    query_text: null
+    expected_mode: relaxed
+    expected_relaxation_type: same_gene_different_variant
+    expected_citation_id: "2915"
+    notes: >-
+      FGFR1 has 3 real loaded variants (Expression/268, Amplification/267,
+      N546K/515). The queried hgvs_p matches none of them, forcing
+      relaxation onto the gene's other real evidence.
+
+  - id: relaxed-a-kdr
+    bucket: mode2_path_a
+    gene: KDR
+    key_type: hgvs_p
+    key_value: "NP_002244.1:p.Val804Met"
+    disease: null
+    drug_class: null
+    query_text: null
+    expected_mode: relaxed
+    expected_relaxation_type: same_gene_different_variant
+    expected_citation_id: "1106"
+    notes: KDR has 2 real loaded variants (A1065T/467, D717V/468).
+
+  - id: relaxed-a-cdk4
+    bucket: mode2_path_a
+    gene: CDK4
+    key_type: variant_name
+    key_value: Overexpression
+    disease: null
+    drug_class: null
+    query_text: null
+    expected_mode: relaxed
+    expected_relaxation_type: same_gene_different_variant
+    expected_citation_id: "4872"
+    notes: >-
+      CDK4 has 2 real loaded variants named "EXPRESSION" and
+      "Amplification" -- "Overexpression" matches neither exactly.
+
+  - id: relaxed-a-ptprd
+    bucket: mode2_path_a
+    gene: PTPRD
+    key_type: variant_name
+    key_value: Loss-of-function
+    disease: null
+    drug_class: null
+    query_text: null
+    expected_mode: relaxed
+    expected_relaxation_type: same_gene_different_variant
+    expected_citation_id: "10061"
+    notes: PTPRD has 2 real loaded variants named "R995C" and "V253I".
+
+  - id: relaxed-a-tp53
+    bucket: mode2_path_a
+    gene: TP53
+    key_type: variant_name
+    key_value: Frameshift
+    disease: null
+    drug_class: null
+    query_text: null
+    expected_mode: relaxed
+    expected_relaxation_type: same_gene_different_variant
+    expected_citation_id: "1170"
+    notes: >-
+      TP53 has 2 real loaded variants named "Deleterious Mutation" and
+      "R273H".
+
+  # --- mode2_path_b: real genes NOT in this graph's 31-gene scope -------
+  - id: relaxed-b-csf1r
+    bucket: mode2_path_b
+    gene: CSF1R
+    key_type: variant_name
+    key_value: Amplification
+    disease: Angiosarcoma
+    drug_class: Macrophage colony stimulating factor receptor inhibitor
+    query_text: null
+    expected_mode: relaxed
+    expected_relaxation_type: same_disease_drug_class
+    expected_citation_id: "1106"
+    notes: >-
+      CSF1R is the real, literal target of this drug class but is not
+      loaded in this repo's 31-gene scope -- zero direct evidence,
+      findable only via disease+drug-class relaxation onto KDR/PTPRB's
+      real evidence.
+
+  - id: relaxed-b-tpr-ntrk1
+    bucket: mode2_path_b
+    gene: "TPR::NTRK1"
+    key_type: variant_name
+    key_value: Fusion
+    disease: Congenital Fibrosarcoma
+    drug_class: Neurotrophic tyrosine kinase receptor inhibitor
+    query_text: null
+    expected_mode: relaxed
+    expected_relaxation_type: same_disease_drug_class
+    expected_citation_id: "6099"
+    notes: >-
+      TPR-NTRK1 is a real, clinically documented NTRK1 fusion partner not
+      present in this sarcoma-scope CIViC load -- relaxation onto
+      ETV6::NTRK3/LMNA::NTRK1/SQSTM1::NTRK1/EML4::NTRK3's real evidence.
+
+  - id: relaxed-b-col1a2-pdgfb
+    bucket: mode2_path_b
+    gene: "COL1A2::PDGFB"
+    key_type: variant_name
+    key_value: Fusion
+    disease: Dermatofibrosarcoma Protuberans
+    drug_class: Macrophage colony stimulating factor receptor inhibitor
+    query_text: null
+    expected_mode: relaxed
+    expected_relaxation_type: same_disease_drug_class
+    expected_citation_id: "7991"
+    notes: >-
+      A documented rarer DFSP fusion variant (COL1A1::PDGFB is the
+      classic one, loaded here) not present in this scope's graph.
+
+  - id: relaxed-b-cdk6
+    bucket: mode2_path_b
+    gene: CDK6
+    key_type: variant_name
+    key_value: Amplification
+    disease: Ewing Sarcoma
+    drug_class: CDK6/cyclin D1 inhibitor
+    query_text: null
+    expected_mode: relaxed
+    expected_relaxation_type: same_disease_drug_class
+    expected_citation_id: "1879"
+    notes: >-
+      CDK6 itself is not loaded; relaxation onto CDKN2A/CDKN2B's real
+      Ewing Sarcoma evidence.
+
+  - id: relaxed-b-igf1
+    bucket: mode2_path_b
+    gene: IGF1
+    key_type: variant_name
+    key_value: Overexpression
+    disease: Ewing Sarcoma
+    drug_class: Insulin-like growth factor I receptor inhibitor
+    query_text: null
+    expected_mode: relaxed
+    expected_relaxation_type: same_disease_drug_class
+    expected_citation_id: "1879"
+    notes: >-
+      IGF1 (the ligand) is distinct from IGF1R, which IS loaded elsewhere
+      in this graph under an unrelated disease/variant -- chosen
+      deliberately so the gene lookup itself finds nothing, avoiding an
+      accidental path (a) match on IGF1R's own unrelated evidence.
+
+  # --- mode3_semantic: all 5 real Publication nodes loaded (Phase 5) ----
+  - id: semantic-adult-sarcoma-ntrk
+    bucket: mode3_semantic
+    gene: null
+    key_type: null
+    key_value: null
+    disease: null
+    drug_class: null
+    query_text: Adult sarcomas with NTRK gene fusions clinicopathologic features
+    expected_mode: semantic
+    expected_relaxation_type: null
+    expected_citation_id: "42588743"
+    notes: real Publication node loaded live during Phase 5's integration test.
+
+  - id: semantic-genomic-profiling
+    bucket: mode3_semantic
+    gene: null
+    key_type: null
+    key_value: null
+    disease: null
+    drug_class: null
+    query_text: genomic profiling tests comparison bone soft tissue sarcoma
+    expected_mode: semantic
+    expected_relaxation_type: null
+    expected_citation_id: "42202043"
+    notes: real Publication node loaded live during Phase 5's integration test.
+
+  - id: semantic-purpuric-patches
+    bucket: mode3_semantic
+    gene: null
+    key_type: null
+    key_value: null
+    disease: null
+    drug_class: null
+    query_text: purpuric skin lesions pediatric NTRK rearranged spindle cell neoplasm
+    expected_mode: semantic
+    expected_relaxation_type: null
+    expected_citation_id: "42107386"
+    notes: real Publication node loaded live during Phase 5's integration test.
+
+  - id: semantic-head-neck
+    bucket: mode3_semantic
+    gene: null
+    key_type: null
+    key_value: null
+    disease: null
+    drug_class: null
+    query_text: NTRK rearranged soft tissue sarcoma head and neck treatment response
+    expected_mode: semantic
+    expected_relaxation_type: null
+    expected_citation_id: "41589225"
+    notes: real Publication node loaded live during Phase 5's integration test.
+
+  - id: semantic-systematic-review
+    bucket: mode3_semantic
+    gene: null
+    key_type: null
+    key_value: null
+    disease: null
+    drug_class: null
+    query_text: systematic review NTRK1-3 fusions sarcoma prevalence clinical implications
+    expected_mode: semantic
+    expected_relaxation_type: null
+    expected_citation_id: "41400063"
+    notes: real Publication node loaded live during Phase 5's integration test.

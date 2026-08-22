@@ -1,0 +1,86 @@
+# CIViC load scope -- which cancer types are pulled into the Tier 1 graph.
+#
+# This is deliberately versioned config DATA, never inline Python literals.
+# RareCure rule #6 (docs/rarecure-build-reference.md SS3): RareCure's cancer
+# ontology and gene panels were inline dict literals in config.py despite its
+# README promising YAML files that did not exist, which made its
+# cohort-inclusion logic unauditable -- nobody could diff "which diseases were
+# in scope for this run" against a specific loaded result.
+#
+# Bump `config_version` on every scope change so a loaded graph can be traced
+# back to the exact scope that produced it. The loader records this version on
+# every node it writes (as source_version).
+#
+# Diseases are identified by Disease Ontology ID (DOID), NOT by name substring.
+# RareCure rule #8: its `k in patient.cancer_type.lower()` substring check sent
+# "malignant_fibrous_histiocytoma" to a default gene panel because the string
+# did not contain "sarcoma", producing a wrong top drug for 42 patients.
+# Matching on ontology IDs makes that class of bug impossible.
+#
+# `evidence_item_count` is the count CIViC reported when this entry was added.
+# It is documentation of why the entry is here, not a value the loader reads.
+
+config_version: "2026-08-21.1"
+description: >-
+  V1 scope: soft-tissue and bone sarcomas. Sarcoma is the intended focus per
+  tier1-implementation-spec.md SS1 -- it ties back to RareCure's own validation
+  cohort and is the source for the Tier 2 demo case in validation-plan.md.
+
+# Only ACCEPTED, PREDICTIVE evidence is loaded (see civic_loader.py).
+# SUBMITTED and REJECTED evidence is excluded: it has not cleared CIViC's own
+# curation review, and this graph is clinical-facing.
+evidence_status: ACCEPTED
+evidence_type: PREDICTIVE
+
+diseases:
+  - doid: "1115"
+    name: Sarcoma
+    evidence_item_count: 27
+  - doid: "3260"
+    name: Spindle Cell Rhabdomyosarcoma
+    evidence_item_count: 27
+  - doid: "3369"
+    name: Ewing Sarcoma
+    evidence_item_count: 18
+  - doid: "3507"
+    name: Dermatofibrosarcoma Protuberans
+    evidence_item_count: 18
+  - doid: "8418"
+    name: Congenital Fibrosarcoma
+    evidence_item_count: 17
+  - doid: "5485"
+    name: Synovial Sarcoma
+    evidence_item_count: 14
+  - doid: "4051"
+    name: Alveolar Rhabdomyosarcoma
+    evidence_item_count: 12
+  - doid: "3347"
+    name: Osteosarcoma
+    evidence_item_count: 11
+  - doid: "4880"
+    name: Kidney Clear Cell Sarcoma
+    evidence_item_count: 10
+  - doid: "0081406"
+    name: Round Cell Sarcoma With EWSR1-non-ETS Fusion
+    evidence_item_count: 9
+  - doid: "3368"
+    name: Ewing Sarcoma Of Bone
+    evidence_item_count: 8
+  - doid: "4233"
+    name: Clear Cell Sarcoma
+    evidence_item_count: 8
+  - doid: "4545"
+    name: Mesenchymal Chondrosarcoma
+    evidence_item_count: 8
+  - doid: "3382"
+    name: Liposarcoma
+    evidence_item_count: 6
+  - doid: "0001816"
+    name: Angiosarcoma
+    evidence_item_count: 6
+  - doid: "3247"
+    name: Rhabdomyosarcoma
+    evidence_item_count: 6
+  - doid: "5363"
+    name: Myxoid Liposarcoma
+    evidence_item_count: 6

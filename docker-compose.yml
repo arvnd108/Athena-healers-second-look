@@ -1,0 +1,35 @@
+# Local FalkorDB for the Tier 1 knowledge-graph retrieval service.
+#
+# Start:   docker compose up -d
+# Stop:    docker compose down
+# Browser: http://localhost:3000  (graph UI, no password in this compose)
+#
+# If you do not have Docker:
+#   1. One-shot container (if you can run Docker elsewhere):
+#        docker run -p 6379:6379 -p 3000:3000 --rm falkordb/falkordb:latest
+#   2. FalkorDB Cloud: https://app.falkordb.cloud
+#      then set FALKORDB_HOST / FALKORDB_PORT / FALKORDB_PASSWORD.
+#   3. Self-host without Docker: Redis 8.0+ with the FalkorDB module loaded
+#      (see https://docs.falkordb.com/getting-started/). Redis 7.x is not supported.
+#
+# This stack has no requirepass so verify_falkordb.py can connect with
+# FALKORDB_HOST=localhost and FALKORDB_PORT=6379.
+
+services:
+  falkordb:
+    image: falkordb/falkordb:latest
+    container_name: falkordb
+    ports:
+      - "6379:6379"
+      - "3000:3000"
+    volumes:
+      - falkordb_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  falkordb_data:

@@ -1,0 +1,1318 @@
+<title>The Ångström Problem</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+
+<style>
+:root {
+  --ground:        #F3F6F7;
+  --surface:       #FFFFFF;
+  --surface-sunk:  #E9EEF0;
+  --ink:           #0E1418;
+  --ink-soft:      #33424B;
+  --muted:         #54646E;
+  --hair:          #CFDADE;
+  --hair-strong:   #A9BAC1;
+
+  --accent:        #0F6E6B;
+  --accent-soft:   #DCEDEB;
+  --limit:         #9E3B3B;
+  --limit-soft:    #F4E2E2;
+  --caution:       #A8721C;
+  --caution-soft:  #F6EBD6;
+
+  --serif: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+  --sans:  "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --mono:  "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  --spine: 68ch;
+  --wide:  min(1080px, 94vw);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground:       #0B1114;
+    --surface:      #121A1E;
+    --surface-sunk: #0A0F12;
+    --ink:          #E6EEF1;
+    --ink-soft:     #B9C8CE;
+    --muted:        #8598A1;
+    --hair:         #263238;
+    --hair-strong:  #3A4C54;
+
+    --accent:       #4FBDB2;
+    --accent-soft:  #10312F;
+    --limit:        #D97D7D;
+    --limit-soft:   #2E1618;
+    --caution:      #DCA33F;
+    --caution-soft: #2C2211;
+  }
+}
+
+:root[data-theme="dark"] {
+  --ground:       #0B1114;
+  --surface:      #121A1E;
+  --surface-sunk: #0A0F12;
+  --ink:          #E6EEF1;
+  --ink-soft:     #B9C8CE;
+  --muted:        #8598A1;
+  --hair:         #263238;
+  --hair-strong:  #3A4C54;
+
+  --accent:       #4FBDB2;
+  --accent-soft:  #10312F;
+  --limit:        #D97D7D;
+  --limit-soft:   #2E1618;
+  --caution:      #DCA33F;
+  --caution-soft: #2C2211;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 17px;
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  padding: 0 20px 96px;
+}
+
+.spine { width: 100%; max-width: var(--spine); }
+.wide  { width: 100%; max-width: var(--wide); }
+
+/* ---------- masthead ---------- */
+
+.masthead {
+  width: 100%;
+  max-width: var(--wide);
+  padding: 72px 0 40px;
+  border-bottom: 1px solid var(--hair);
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.kicker {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--accent);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  align-items: baseline;
+}
+.kicker span:not(:first-child)::before {
+  content: "";
+  display: inline-block;
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--hair-strong);
+  margin-right: 18px;
+  vertical-align: 3px;
+}
+
+h1 {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: clamp(38px, 6.4vw, 62px);
+  line-height: 1.06;
+  letter-spacing: -0.018em;
+  margin: 0;
+  text-wrap: balance;
+}
+
+.standfirst {
+  font-family: var(--serif);
+  font-size: clamp(18px, 2.3vw, 21px);
+  line-height: 1.55;
+  color: var(--ink-soft);
+  max-width: 60ch;
+  margin: 0;
+}
+
+.thesis {
+  border-left: 3px solid var(--accent);
+  padding: 4px 0 4px 20px;
+  font-size: 16px;
+  color: var(--ink-soft);
+  max-width: 62ch;
+}
+.thesis strong { color: var(--ink); font-weight: 600; }
+
+/* ---------- sections ---------- */
+
+section { width: 100%; display: flex; flex-direction: column; align-items: center; }
+
+.part-head {
+  width: 100%;
+  max-width: var(--spine);
+  padding: 64px 0 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.part-num {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+h2 {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: clamp(26px, 3.6vw, 34px);
+  line-height: 1.18;
+  letter-spacing: -0.012em;
+  margin: 0;
+  text-wrap: balance;
+}
+
+h3 {
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 17px;
+  letter-spacing: 0.005em;
+  margin: 30px 0 0;
+  color: var(--ink);
+}
+
+p { margin: 16px 0 0; }
+.spine > p:first-child { margin-top: 18px; }
+
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+a:focus-visible, summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+strong { font-weight: 600; }
+em { font-style: italic; }
+
+code, .num {
+  font-family: var(--mono);
+  font-size: 0.9em;
+  font-variant-numeric: tabular-nums;
+}
+code {
+  background: var(--surface-sunk);
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: var(--ink-soft);
+}
+
+ul, ol { margin: 16px 0 0; padding-left: 22px; }
+li { margin: 8px 0; }
+li::marker { color: var(--hair-strong); }
+
+/* ---------- instrument panels ---------- */
+
+.panel {
+  width: 100%;
+  max-width: var(--wide);
+  margin-top: 34px;
+  background: var(--surface);
+  border: 1px solid var(--hair);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.panel-head {
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--hair);
+  background: var(--surface-sunk);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.panel-title {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.panel-note { font-size: 13px; color: var(--muted); }
+
+.panel-body { padding: 22px; }
+.panel-scroll { overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14.5px;
+}
+th {
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 500;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--hair-strong);
+  white-space: nowrap;
+}
+td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--hair);
+  vertical-align: top;
+  color: var(--ink-soft);
+}
+tbody tr:last-child td { border-bottom: none; }
+td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--ink); }
+td.subj { color: var(--ink); font-weight: 500; white-space: nowrap; }
+
+.pill {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  padding: 3px 8px;
+  border-radius: 3px;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+.pill.yes  { background: var(--accent-soft);  color: var(--accent); border-color: var(--accent); }
+.pill.no   { background: var(--limit-soft);   color: var(--limit);  border-color: var(--limit); }
+.pill.part { background: var(--caution-soft); color: var(--caution); border-color: var(--caution); }
+
+/* ---------- callouts ---------- */
+
+.note {
+  margin-top: 28px;
+  padding: 20px 22px;
+  border: 1px solid var(--hair);
+  border-left: 3px solid var(--muted);
+  border-radius: 3px;
+  background: var(--surface);
+  font-size: 15.5px;
+  color: var(--ink-soft);
+}
+.note .label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.note p:first-of-type { margin-top: 0; }
+.note.limit  { border-left-color: var(--limit); }
+.note.limit .label { color: var(--limit); }
+.note.key    { border-left-color: var(--accent); }
+.note.key .label { color: var(--accent); }
+
+/* ---------- assumption chain ---------- */
+
+.chain {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.link {
+  display: grid;
+  grid-template-columns: 132px 1fr;
+  gap: 20px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--hair);
+  align-items: start;
+}
+.link:last-child { border-bottom: none; }
+.link-from {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--ink);
+  line-height: 1.45;
+  padding-top: 2px;
+}
+.link-from .arrow { color: var(--hair-strong); display: block; margin: 3px 0; }
+.link-body { font-size: 15px; color: var(--ink-soft); }
+.link-body .verdict { display: block; margin-top: 8px; }
+
+@media (max-width: 640px) {
+  .link { grid-template-columns: 1fr; gap: 10px; }
+}
+
+/* ---------- noise floor figure ---------- */
+
+figure { margin: 0; }
+figcaption {
+  margin-top: 14px;
+  font-size: 13.5px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.svg-wrap { overflow-x: auto; }
+svg { display: block; max-width: 100%; height: auto; }
+
+.bar-label { font-family: var(--mono); font-size: 11.5px; fill: var(--muted); }
+.bar-value { font-family: var(--mono); font-size: 11.5px; fill: var(--ink); }
+.axis-line { stroke: var(--hair-strong); stroke-width: 1; }
+.tick-text { font-family: var(--mono); font-size: 10.5px; fill: var(--muted); }
+.grid-line { stroke: var(--hair); stroke-width: 1; }
+
+/* ---------- options ---------- */
+
+.option {
+  border: 1px solid var(--hair);
+  border-radius: 4px;
+  background: var(--surface);
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.options { display: grid; gap: 16px; margin-top: 30px; }
+@media (min-width: 780px) { .options { grid-template-columns: 1fr 1fr; } }
+
+.option-head { display: flex; gap: 12px; align-items: baseline; justify-content: space-between; flex-wrap: wrap; }
+.option-name { font-family: var(--serif); font-size: 19px; font-weight: 600; color: var(--ink); }
+.option p { margin: 0; font-size: 15px; color: var(--ink-soft); }
+.option dl {
+  margin: 6px 0 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 14px;
+  font-size: 13.5px;
+}
+.option dt {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding-top: 2px;
+}
+.option dd { margin: 0; color: var(--ink-soft); }
+
+/* ---------- claims ---------- */
+
+.claims { display: grid; gap: 16px; margin-top: 30px; }
+@media (min-width: 780px) { .claims { grid-template-columns: 1fr 1fr; } }
+.claim-col {
+  border: 1px solid var(--hair);
+  border-radius: 4px;
+  padding: 22px;
+  background: var(--surface);
+}
+.claim-col h3 { margin-top: 0; display: flex; align-items: center; gap: 9px; }
+.claim-col ul { padding-left: 18px; }
+.claim-col li { font-size: 15px; color: var(--ink-soft); }
+.claim-col.can  { border-top: 3px solid var(--accent); }
+.claim-col.cant { border-top: 3px solid var(--limit); }
+
+/* ---------- closing ---------- */
+
+.colophon {
+  width: 100%;
+  max-width: var(--wide);
+  margin-top: 80px;
+  padding-top: 26px;
+  border-top: 1px solid var(--hair);
+  font-size: 13.5px;
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a { transition: color 120ms ease; }
+}
+/* ---------- print / PDF ---------- */
+
+@media print {
+  :root {
+    --ground:       #FFFFFF;
+    --surface:      #FFFFFF;
+    --surface-sunk: #F2F5F6;
+  }
+  body { font-size: 11pt; line-height: 1.5; }
+  .page { padding: 0 0 12pt; }
+  .masthead { padding: 0 0 18pt; break-after: avoid; }
+  h1 { font-size: 30pt; }
+  h2 { font-size: 17pt; }
+  h3 { font-size: 11.5pt; }
+  .part-head { padding: 22pt 0 4pt; break-after: avoid; break-inside: avoid; }
+  section { break-inside: auto; }
+  .panel, figure, .note, .option, .claim-col { break-inside: avoid; }
+  .options, .claims { break-inside: auto; }
+  .link { break-inside: avoid; }
+  tr { break-inside: avoid; }
+  thead { display: table-header-group; }
+  .panel-scroll, .svg-wrap { overflow: visible; }
+  .colophon { break-inside: avoid; margin-top: 28pt; }
+  a { color: var(--ink); text-decoration: none; }
+}
+
+@page { margin: 16mm 14mm; }
+</style>
+
+<div class="page">
+
+<header class="masthead">
+  <div class="kicker">
+    <span>SecondLook · Tier 2</span>
+    <span>Theory &amp; Constraints</span>
+    <span>Internal briefing</span>
+  </div>
+  <h1>The Ångström Problem</h1>
+  <p class="standfirst">
+    Why structural prediction can tell you <em>where</em> a mutation sits but not
+    <em>whether</em> a drug will still work — and what to build instead.
+  </p>
+  <div class="thesis">
+    <strong>The short version.</strong> Tier 2 asks a docking score to resolve differences of
+    <span class="num">0.02–0.56</span> kcal/mol. The instrument's own error bar is
+    <span class="num">1.0–2.19</span> kcal/mol. We are reading below the noise floor. This is not a
+    bug, a tuning problem, or an engineering failure — it is a mismatch between the question and
+    the instrument, and it has known alternatives.
+  </div>
+</header>
+
+<!-- ============ PART 1 ============ -->
+<section>
+  <div class="part-head">
+    <div class="part-num">Part 1</div>
+    <h2>What we are actually trying to do</h2>
+  </div>
+  <div class="spine">
+    <p>
+      A patient has a cancer with a specific mutation. Standard-of-care has failed, or the mutation
+      is not in any database. The oncologist needs a defensible next step.
+    </p>
+    <p>
+      <strong>Tier 1</strong> answers this by retrieval: it searches curated evidence (CIViC),
+      clinical trials, and literature for what is <em>documented</em> about this variant. Every
+      answer carries a citation. This is the safe, primary path.
+    </p>
+    <p>
+      <strong>Tier 2</strong> exists for when Tier 1 finds nothing. There is no citation to give,
+      so instead we try to <em>compute</em> something from first principles — from the physical
+      structure of the protein and the drug.
+    </p>
+    <p>
+      That is the whole premise, and it is a reasonable one. The question is what, precisely, we
+      can compute.
+    </p>
+  </div>
+</section>
+
+<!-- ============ PART 2 ============ -->
+<section>
+  <div class="part-head">
+    <div class="part-num">Part 2</div>
+    <h2>The chain of assumptions behind the scenes</h2>
+  </div>
+  <div class="spine">
+    <p>
+      Tier 2's original design rests on a chain of four inferences. Each looks obvious. Each is an
+      assumption, and three of them are conditional.
+    </p>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-title">The inference chain</div>
+      <div class="panel-note">Every arrow is a claim that must hold</div>
+    </div>
+    <div class="panel-body">
+      <div class="chain">
+
+        <div class="link">
+          <div class="link-from">
+            mutation
+            <span class="arrow">↓</span>
+            structure change
+          </div>
+          <div class="link-body">
+            A single amino-acid substitution changes the protein's shape.
+            <span class="verdict"><span class="pill part">MOSTLY FALSE</span>
+            A point mutation leaves the fold essentially unchanged. This is well established — it
+            is precisely why our own spec forbids re-folding the mutant. The change is local: one
+            side chain.</span>
+          </div>
+        </div>
+
+        <div class="link">
+          <div class="link-from">
+            structure change
+            <span class="arrow">↓</span>
+            binding change
+          </div>
+          <div class="link-body">
+            The altered shape changes how well the drug binds.
+            <span class="verdict"><span class="pill part">ONLY IF NEARBY</span>
+            True when the residue contacts the drug. A residue 16 Å away cannot alter the contact
+            surface, because it is not part of it.</span>
+          </div>
+        </div>
+
+        <div class="link">
+          <div class="link-from">
+            binding change
+            <span class="arrow">↓</span>
+            clinical resistance
+          </div>
+          <div class="link-body">
+            Weaker binding means the drug stops working.
+            <span class="verdict"><span class="pill part">ONE OF MANY ROUTES</span>
+            Binding loss is one mechanism of resistance among at least five. See Part 3.</span>
+          </div>
+        </div>
+
+        <div class="link">
+          <div class="link-from">
+            binding change
+            <span class="arrow">↓</span>
+            we can measure it
+          </div>
+          <div class="link-body">
+            Docking can quantify the difference.
+            <span class="verdict"><span class="pill no">NOT AT THIS SCALE</span>
+            The difference we need is smaller than the method's error. See Part 5.</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="spine">
+    <div class="note key">
+      <span class="label">The teaching point</span>
+      <p>
+        None of these arrows is <em>wrong</em>. Each is <em>conditional</em>. The design treated
+        them as unconditional, so the pipeline was scoped to answer a general question using a
+        method that only answers a specific one.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PART 3 ============ -->
+<section>
+  <div class="part-head">
+    <div class="part-num">Part 3</div>
+    <h2>The biology: what actually causes resistance</h2>
+  </div>
+  <div class="spine">
+    <p>
+      When a targeted therapy stops working, the cause is one of several distinct mechanisms. Only
+      the first is a binding-affinity problem.
+    </p>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-title">Resistance mechanisms</div>
+      <div class="panel-note">Structural docking addresses row 1 only</div>
+    </div>
+    <div class="panel-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Mechanism</th>
+            <th>Example</th>
+            <th>What changes</th>
+            <th>Docking?</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="subj">Steric / chemical interference</td>
+            <td class="n">EGFR T790M</td>
+            <td>The residue physically contacts the drug; substitution alters the contact surface</td>
+            <td><span class="pill yes">YES</span></td>
+          </tr>
+          <tr>
+            <td class="subj">Conformational shift</td>
+            <td class="n">BRAF V600E</td>
+            <td>Equilibrium between active and inactive protein states moves</td>
+            <td><span class="pill no">NEEDS ENSEMBLES</span></td>
+          </tr>
+          <tr>
+            <td class="subj">Allosteric</td>
+            <td class="n">KIT D816V</td>
+            <td>A distant residue stabilises a state the drug cannot bind</td>
+            <td><span class="pill no">NEEDS DYNAMICS</span></td>
+          </tr>
+          <tr>
+            <td class="subj">Bypass pathway</td>
+            <td class="n">MET amplification</td>
+            <td>A different protein takes over the signalling role</td>
+            <td><span class="pill no">DIFFERENT PROTEIN</span></td>
+          </tr>
+          <tr>
+            <td class="subj">Expression / efflux / plasticity</td>
+            <td class="n">—</td>
+            <td>Target abundance, drug transport, or cell identity changes</td>
+            <td><span class="pill no">NOT STRUCTURAL</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="spine">
+    <div class="note limit">
+      <span class="label">Constraint 1 · Selection bias in the test set</span>
+      <p>
+        Our nine gold-standard cases were chosen because they are <em>clinically famous</em>.
+        Clinical fame does not correlate with structural tractability. The set spans all five rows
+        above, so most of it was never answerable by this method — the validation was measuring a
+        mismatch, not an implementation.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PART 4 ============ -->
+<section>
+  <div class="part-head">
+    <div class="part-num">Part 4</div>
+    <h2>The physics: what "binding affinity" is and how it is computed</h2>
+  </div>
+  <div class="spine">
+    <p>
+      Binding affinity is a free energy — <span class="num">ΔG</span>, in kcal/mol. More negative
+      means tighter binding. What we want is <span class="num">ΔΔG</span>: the
+      <em>difference</em> between how the drug binds the normal protein and how it binds the
+      mutant.
+    </p>
+
+    <h3>How docking estimates it</h3>
+    <p>
+      AutoDock Vina samples thousands of orientations of the drug inside the binding pocket and
+      scores each with an empirical function — a formula fitted to known complexes, weighting
+      hydrophobic contact, hydrogen bonds, and steric clash. It returns the best score found.
+    </p>
+    <p>
+      To get <span class="num">ΔΔG</span> we run this twice, once per protein form, and subtract.
+      <strong>Subtracting two noisy estimates gives an answer noisier than either.</strong>
+    </p>
+
+    <h3>The three instruments in play</h3>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-title">Methods and their published accuracy</div>
+      <div class="panel-note">Figures from the project's own research review</div>
+    </div>
+    <div class="panel-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Question it answers</th>
+            <th>Reported accuracy</th>
+            <th>Availability</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="subj">AlphaMissense</td>
+            <td>Is this variant likely pathogenic?</td>
+            <td class="n">90% precision on ClinVar</td>
+            <td><span class="pill yes">ALWAYS</span></td>
+          </tr>
+          <tr>
+            <td class="subj">mCSM-lig</td>
+            <td>How does this mutation change drug affinity?</td>
+            <td class="n">ρ 0.67 · 0.73–0.77 within 5 Å<br>re-test: PCC 0.63, RMSE 2.19</td>
+            <td><span class="pill part">NEEDS PDB LIGAND</span></td>
+          </tr>
+          <tr>
+            <td class="subj">AutoDock Vina</td>
+            <td>How well does this drug fit this pocket?</td>
+            <td class="n">evaluated and <em>failed</em><br>on resistance mutations</td>
+            <td><span class="pill yes">ALWAYS</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="spine">
+    <div class="note">
+      <span class="label">Two things worth noticing</span>
+      <p>
+        <strong>AlphaMissense answers a different question.</strong> It predicts whether a variant
+        damages the protein — not whether a particular drug still binds. A variant can be highly
+        pathogenic and leave drug binding untouched. Conflating the two would be a category error.
+      </p>
+      <p>
+        <strong>mCSM-lig is the right tool and it agrees with us.</strong> Its accuracy is
+        ρ 0.627 overall but ρ 0.674 for mutations <em>within 5 Å of the ligand</em> — the headline
+        figure is the near-ligand case. The method's own literature says the signal lives near the
+        pocket, independently confirming the distance threshold we reached from our measurements.
+        On independent test sets it drops materially (R ≈ 0.43 on a TKI set).
+      </p>
+      <p>
+        <strong>Vina has been evaluated on this exact task, and failed it.</strong> This is stronger
+        than "no figure exists": a direct 2026 assessment found scoring functions including Vina
+        failed to identify drug-resistant mutations, on which dedicated mutation-based methods
+        (mCSM-lig, PremPLI, Rosetta flex-ddG) succeeded. Our primary-traffic method has been
+        measured against our question and did not answer it.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PART 5 ============ -->
+<section>
+  <div class="part-head">
+    <div class="part-num">Part 5</div>
+    <h2>The decisive constraint: signal below the noise floor</h2>
+  </div>
+  <div class="spine">
+    <p>
+      This is the single most important slide. Everything else is detail.
+    </p>
+    <p>
+      Below, on one scale in kcal/mol: the differences we measured across the validation set,
+      against the error bars of the instruments measuring them.
+    </p>
+  </div>
+
+  <figure class="panel">
+    <div class="panel-head">
+      <div class="panel-title">Signal vs. instrument error</div>
+      <div class="panel-note">kcal/mol · same scale throughout</div>
+    </div>
+    <div class="panel-body svg-wrap">
+      <svg viewBox="0 0 720 300" role="img" aria-label="Bar chart comparing measured signal magnitudes of 0.02 to 0.56 kcal per mole against instrument error bars of 1.0 to 2.19 kcal per mole, showing the signal is far smaller than the error.">
+        <!-- gridlines -->
+        <g>
+          <line class="grid-line" x1="190" y1="30" x2="190" y2="250"/>
+          <line class="grid-line" x1="300" y1="30" x2="300" y2="250"/>
+          <line class="grid-line" x1="410" y1="30" x2="410" y2="250"/>
+          <line class="grid-line" x1="520" y1="30" x2="520" y2="250"/>
+          <line class="grid-line" x1="630" y1="30" x2="630" y2="250"/>
+        </g>
+
+        <!-- signal band -->
+        <rect x="190" y="46" width="25.3" height="26" fill="var(--accent)" opacity="0.9"/>
+        <text class="bar-label" x="178" y="63" text-anchor="end">our deltas</text>
+        <text class="bar-value" x="228" y="63">0.02 – 0.56</text>
+
+        <!-- best case RMSE -->
+        <rect x="190" y="96" width="110" height="26" fill="var(--caution)" opacity="0.85"/>
+        <text class="bar-label" x="178" y="113" text-anchor="end">best-case RMSE</text>
+        <text class="bar-value" x="312" y="113">1.0</text>
+
+        <!-- FEP -->
+        <rect x="190" y="146" width="220" height="26" fill="var(--caution)" opacity="0.55"/>
+        <text class="bar-label" x="178" y="163" text-anchor="end">FEP ceiling</text>
+        <text class="bar-value" x="422" y="163">1.0 – 2.0</text>
+
+        <!-- mCSM re-test RMSE -->
+        <rect x="190" y="196" width="240.9" height="26" fill="var(--limit)" opacity="0.8"/>
+        <text class="bar-label" x="178" y="213" text-anchor="end">mCSM-lig re-test</text>
+        <text class="bar-value" x="443" y="213">2.19</text>
+
+        <!-- axis -->
+        <line class="axis-line" x1="190" y1="250" x2="680" y2="250"/>
+        <g>
+          <text class="tick-text" x="190" y="268" text-anchor="middle">0</text>
+          <text class="tick-text" x="300" y="268" text-anchor="middle">1.0</text>
+          <text class="tick-text" x="410" y="268" text-anchor="middle">2.0</text>
+          <text class="tick-text" x="520" y="268" text-anchor="middle">3.0</text>
+          <text class="tick-text" x="630" y="268" text-anchor="middle">4.0</text>
+          <text class="tick-text" x="435" y="290" text-anchor="middle">kcal/mol</text>
+        </g>
+      </svg>
+    </div>
+    <figcaption style="padding: 0 22px 22px;">
+      The teal bar is everything we are trying to detect. The bars beneath it are how wrong each
+      method is expected to be. No threshold recovers a signal smaller than the error of the
+      instrument reading it.
+    </figcaption>
+  </figure>
+
+  <div class="spine">
+    <div class="note limit">
+      <span class="label">Constraint 2 · Resolution</span>
+      <p>
+        We are using a ruler marked in centimetres to measure differences in microns. This is why
+        the gefitinib delta moved from <span class="num">+0.556</span> to
+        <span class="num">+0.313</span> when we changed nothing but receptor preparation — with a
+        fixed random seed. We were reading noise, and noise moves.
+      </p>
+    </div>
+
+    <h3>The construction flaw that makes it circular</h3>
+    <p>
+      There is a second, sharper problem. We build the mutant protein by swapping one side chain on
+      the wild-type backbone — deliberately, because re-folding a point mutant just adds prediction
+      error to an essentially identical structure.
+    </p>
+    <p>
+      But that means our two structures differ by <em>exactly one side-chain rotamer</em>, by
+      construction. Any effect that works through backbone motion or conformational change is
+      <strong>definitionally invisible</strong> — we removed it from the model before measuring.
+    </p>
+
+    <div class="note limit">
+      <span class="label">Constraint 3 · The blind spot matches the failures exactly</span>
+      <p>
+        BRAF V600E and KIT D816V did not fail because docking is imprecise. They failed because
+        their mechanisms are conformational and allosteric, and we built those out of the
+        representation. The method's blind spot is precisely the set of cases it got wrong.
+      </p>
+    </div>
+
+    <h3>The trap that produces a confidently wrong answer</h3>
+    <p>
+      Some drugs work by forming a <em>covalent bond</em> to the protein. Osimertinib bonds EGFR
+      Cys797. Both our scoring methods are non-covalent — their scoring functions contain no term
+      for bond formation, so they evaluate only the reversible pose.
+    </p>
+    <p>
+      For <strong>EGFR C797S</strong>, resistance <em>is</em> the loss of that cysteine. The
+      reversible pose still fits the pocket, so a non-covalent score can come back unchanged and
+      report <strong>retained binding for a textbook resistance case</strong> — wrong, and in the
+      most dangerous direction.
+    </p>
+    <div class="note limit">
+      <span class="label">Constraint 4 · The invalid control</span>
+      <p>
+        This also invalidates one of our two pre-committed positive controls: EGFR
+        T790M/osimertinib was scoring a covalent drug with non-covalent methods. It was never a
+        valid test as constructed. The pipeline now gates covalent drugs before scoring and returns
+        <code>mechanism_invalidated</code> instead of a number.
+      </p>
+    </div>
+
+    <h3>The silent error nobody sees</h3>
+    <p>
+      Kinases exist in distinct conformational states — <span class="num">DFG-in</span> (active) and
+      <span class="num">DFG-out</span> (inactive). Type-II inhibitors such as
+      <strong>imatinib, nilotinib, and sorafenib bind only the DFG-out state.</strong> AlphaFold
+      predominantly returns DFG-in.
+    </p>
+    <p>
+      So docking imatinib into an AlphaFold model can mean docking it into a pocket it does not
+      bind — producing a confident number that is meaningless, with no error raised. Our research
+      review names this "the single largest silent error source", and notes it applies to
+      <em>exactly</em> the ABL1 / KIT / ALK / BRAF targets in our validation set.
+    </p>
+    <div class="note">
+      <span class="label">Good news</span>
+      <p>
+        This one is solvable. Tools exist (KLIFS, Kincore) that classify kinase conformational state
+        from a structure with near-perfect accuracy — one benchmark mislabelled
+        <span class="num">17 of 8,826</span>. We simply do not check it yet.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PART 6 ============ -->
+<section>
+  <div class="part-head">
+    <div class="part-num">Part 6</div>
+    <h2>The full constraint inventory</h2>
+  </div>
+  <div class="spine">
+    <p>
+      Everything that limits Tier 2, grouped by whether it is fixable and at what cost.
+    </p>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-title">Constraints</div>
+      <div class="panel-note">Physics and biology are fixed; the rest are engineering</div>
+    </div>
+    <div class="panel-scroll">
+      <table>
+        <thead>
+          <tr><th>Class</th><th>Constraint</th><th>Fixable?</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="subj">Biology</td>
+            <td>Most resistance is not binding-mediated</td>
+            <td><span class="pill no">FIXED</span></td>
+          </tr>
+          <tr>
+            <td class="subj">Biology</td>
+            <td>Point mutations barely change the fold; effects are local</td>
+            <td><span class="pill no">FIXED</span></td>
+          </tr>
+          <tr>
+            <td class="subj">Physics</td>
+            <td>Docking error exceeds the signal by 2–40×</td>
+            <td><span class="pill part">CHANGE METHOD</span></td>
+          </tr>
+          <tr>
+            <td class="subj">Physics</td>
+            <td>Rigid receptor; conformational ensembles not represented</td>
+            <td><span class="pill part">ENSEMBLE DOCKING</span></td>
+          </tr>
+          <tr>
+            <td class="subj">Data</td>
+            <td>Not every protein has an experimental structure</td>
+            <td><span class="pill part">ALPHAFOLD (apo)</span></td>
+          </tr>
+          <tr>
+            <td class="subj">Data</td>
+            <td>Structures may not resolve the mutated residue</td>
+            <td><span class="pill yes">SCAN MORE ENTRIES</span></td>
+          </tr>
+          <tr>
+            <td class="subj">Data</td>
+            <td>The bound ligand is usually not the drug being evaluated</td>
+            <td><span class="pill part">DISCLOSE IT</span></td>
+          </tr>
+          <tr>
+            <td class="subj">Data</td>
+            <td>AlphaFold models are apo — no pocket to measure against</td>
+            <td><span class="pill part">DOCK A REFERENCE</span></td>
+          </tr>
+          <tr>
+            <td class="subj">Data</td>
+            <td>Kinase conformational state unchecked (DFG-in/out)</td>
+            <td><span class="pill yes">KLIFS / KINCORE</span></td>
+          </tr>
+          <tr>
+            <td class="subj">Method</td>
+            <td>mCSM-lig requires the drug to be a known PDB ligand</td>
+            <td><span class="pill no">INHERENT</span></td>
+          </tr>
+          <tr>
+            <td class="subj">Method</td>
+            <td>Covalent inhibitors scored by non-covalent methods</td>
+            <td><span class="pill yes">GATE IT</span></td>
+          </tr>
+          <tr>
+            <td class="subj">Data</td>
+            <td>UniProt and PDB residue numbering can disagree</td>
+            <td><span class="pill yes">SIFTS MAPPING</span></td>
+          </tr>
+          <tr>
+            <td class="subj">Engineering</td>
+            <td>Public API rate limits cost whole cases</td>
+            <td><span class="pill yes">RETRY + CACHE</span></td>
+          </tr>
+          <tr>
+            <td class="subj">Engineering</td>
+            <td>Tooling gaps (meeko rejects mutated residues)</td>
+            <td><span class="pill yes">UPSTREAM FIX</span></td>
+          </tr>
+          <tr>
+            <td class="subj">Epistemic</td>
+            <td>A cutoff fitted on the test set cannot be validated by it</td>
+            <td><span class="pill no">DISCIPLINE ONLY</span></td>
+          </tr>
+          <tr>
+            <td class="subj">Epistemic</td>
+            <td>"Not measured" must never render as "measured negative"</td>
+            <td><span class="pill yes">ALREADY ENFORCED</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PART 7 ============ -->
+<section>
+  <div class="part-head">
+    <div class="part-num">Part 7</div>
+    <h2>What we measured</h2>
+  </div>
+  <div class="spine">
+    <p>
+      The pipeline runs end to end. These are real numbers from real structures, not estimates.
+    </p>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-title">Mutation-to-pocket distance</div>
+      <div class="panel-note">Measured from experimental coordinates</div>
+    </div>
+    <div class="panel-scroll">
+      <table>
+        <thead>
+          <tr><th>Case</th><th>Distance</th><th>Band</th><th>Known mechanism</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="subj">EGFR T790M</td><td class="n">3.5 Å</td><td><span class="pill yes">IN CONTACT</span></td><td>gatekeeper — direct contact</td></tr>
+          <tr><td class="subj">ABL1 T315I</td><td class="n">3.5 Å</td><td><span class="pill yes">IN CONTACT</span></td><td>gatekeeper — direct contact</td></tr>
+          <tr><td class="subj">ALK G1202R</td><td class="n">3.7 Å</td><td><span class="pill yes">IN CONTACT</span></td><td>solvent front — direct contact</td></tr>
+          <tr><td class="subj">ALK I1171T</td><td class="n">6.9 Å</td><td><span class="pill part">POCKET-ADJACENT</span></td><td>pocket-lining</td></tr>
+          <tr><td class="subj">EGFR C797S</td><td class="n">10.1 Å</td><td><span class="pill no">DISTANT</span></td><td>covalent-site loss</td></tr>
+          <tr><td class="subj">BRAF V600E</td><td class="n">12.2 Å</td><td><span class="pill no">DISTANT</span></td><td>conformational activation</td></tr>
+          <tr><td class="subj">KIT V560G</td><td class="n">20.0 Å</td><td><span class="pill no">DISTANT</span></td><td>juxtamembrane</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="spine">
+    <p>
+      Every contact-mediated mechanism lands <code>in_contact</code>. Every conformational or
+      allosteric one lands <code>distant</code>. The measurement separates the two cleanly.
+    </p>
+
+    <div class="note limit">
+      <span class="label">Caveat we must state, every time</span>
+      <p>
+        The distance is measured to the ligand that was <em>co-crystallised in that structure</em>,
+        which is usually <strong>not</strong> the drug being evaluated. EGFR structure 8A27 contains
+        ligand <span class="num">KY9</span> — so gefitinib and osimertinib both read
+        <span class="num">3.5 Å</span>, identical, because neither number is about those drugs
+        specifically.
+      </p>
+      <p>
+        The claim is therefore <em>pocket-level</em>, not drug-specific: it locates the mutation
+        relative to the occupied binding site. For inhibitors competing for the same ATP pocket that
+        is the relevant geometry — but it must be said as what it is.
+      </p>
+    </div>
+
+    <div class="note limit">
+      <span class="label">And the binding delta itself</span>
+      <p>
+        Of nine variant-drug pairs, one produced a delta inside the method's applicable range, and
+        it came out <code>uncertain</code>. Pass rate against the pre-committed criteria:
+        <strong>0 of 9.</strong> Both hard-required positive controls failed. We did not move the
+        threshold.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PART 8 ============ -->
+<section>
+  <div class="part-head">
+    <div class="part-num">Part 8</div>
+    <h2>The options</h2>
+  </div>
+  <div class="spine">
+    <p>
+      Every constraint above has a response. They differ enormously in cost and in how much they
+      actually buy.
+    </p>
+  </div>
+
+  <div class="wide options">
+
+    <div class="option">
+      <div class="option-head">
+        <span class="option-name">A · Retrieval, not prediction</span>
+        <span class="pill yes">HIGHEST VALUE</span>
+      </div>
+      <p>
+        Do not compute ΔΔG — look it up. Platinum, MdrDB, and the TKI resistance literature contain
+        <em>measured</em> affinity shifts for these exact variant-drug pairs. This turns an
+        intractable physics problem into a retrieval problem, which is what Tier 1 already does well.
+      </p>
+      <dl>
+        <dt>Cost</dt><dd>Data ingestion; no new science</dd>
+        <dt>Buys</dt><dd>Real measured values with citations</dd>
+        <dt>Limit</dt><dd>Only covers variants somebody has measured</dd>
+      </dl>
+    </div>
+
+    <div class="option">
+      <div class="option-head">
+        <span class="option-name">B · Mechanism classification</span>
+        <span class="pill yes">BUILT</span>
+      </div>
+      <p>
+        Ask what structure can answer: which mechanism class is geometrically available here —
+        contact, pocket-reshaping, or neither? Tells a clinician what <em>kind</em> of problem they
+        face, which is actionable even without a number.
+      </p>
+      <dl>
+        <dt>Cost</dt><dd>Done — running on 8 of 9 cases</dd>
+        <dt>Buys</dt><dd>A defensible claim available today</dd>
+        <dt>Limit</dt><dd>Not a response prediction, and must never be sold as one</dd>
+      </dl>
+    </div>
+
+    <div class="option">
+      <div class="option-head">
+        <span class="option-name">C · Calibration</span>
+        <span class="pill part">NEXT INCREMENT</span>
+      </div>
+      <p>
+        Train on MdrDB/Platinum: features (predicted ΔΔG, AlphaMissense, distance, mutation class)
+        → empirical resistance probability, wrapped in conformal prediction. This does not make
+        docking accurate; it <em>learns how inaccurate it is</em> and reports honest intervals.
+      </p>
+      <dl>
+        <dt>Cost</dt><dd>Dataset access + modelling work</dd>
+        <dt>Buys</dt><dd>Calibrated uncertainty instead of a bare number</dd>
+        <dt>Limit</dt><dd>Still bounded by the underlying signal</dd>
+      </dl>
+    </div>
+
+    <div class="option">
+      <div class="option-head">
+        <span class="option-name">D · Conformational state check</span>
+        <span class="pill yes">CHEAP WIN</span>
+      </div>
+      <p>
+        Classify DFG-in/out before docking and refuse — or correct — when the structure is in the
+        wrong state for the inhibitor class. Removes the largest silent error, and the classifiers
+        are near-perfect on crystal structures.
+      </p>
+      <dl>
+        <dt>Cost</dt><dd>Integrate KLIFS or Kincore</dd>
+        <dt>Buys</dt><dd>Eliminates confident-but-meaningless results</dd>
+        <dt>Limit</dt><dd>Kinases only</dd>
+      </dl>
+    </div>
+
+    <div class="option">
+      <div class="option-head">
+        <span class="option-name">E · Free energy perturbation</span>
+        <span class="pill part">FUNDED PHASE</span>
+      </div>
+      <p>
+        The physically correct instrument, and better than we first credited. A consensus of
+        alchemical free energy and Rosetta reached <strong>RMSE 0.62 kcal/mol, r = 0.71</strong> on
+        144 experimental Abl ΔΔG values; a separate study computed resistance or sensitivity at
+        <strong>88% accuracy</strong> across 144 Abl point mutations — demonstrated on exactly this
+        kinase-resistance problem. Open implementations exist (OpenFE, pmx).
+      </p>
+      <dl>
+        <dt>Cost</dt><dd>~1 GPU-day per mutation-drug pair</dd>
+        <dt>Buys</dt><dd>An answer at the right resolution, on this exact problem class</dd>
+        <dt>Limit</dt><dd>Viable only for a small curated set — e.g. pre-computed demo cases</dd>
+      </dl>
+    </div>
+
+    <div class="option">
+      <div class="option-head">
+        <span class="option-name">F · Ensemble docking</span>
+        <span class="pill part">PARTIAL</span>
+      </div>
+      <p>
+        Dock against multiple conformations rather than one static structure, recovering some of
+        the conformational effects the single-pose approach removes by construction.
+      </p>
+      <dl>
+        <dt>Cost</dt><dd>N× compute; needs a conformer source</dd>
+        <dt>Buys</dt><dd>Partial coverage of mechanism row 2</dd>
+        <dt>Limit</dt><dd>Does not fix the underlying resolution problem</dd>
+      </dl>
+    </div>
+
+  </div>
+
+  <div class="spine">
+    <div class="note key">
+      <span class="label">Recommendation</span>
+      <p>
+        <strong>A and B are the product.</strong> Retrieval where measurements exist, mechanism
+        classification where they do not, and an explicit statement of which regime you are in.
+        <strong>D is the cheapest real improvement.</strong> C is the credible next increment.
+        E is a funded-phase item.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PART 9 ============ -->
+<section>
+  <div class="part-head">
+    <div class="part-num">Part 9</div>
+    <h2>What we can and cannot say</h2>
+  </div>
+  <div class="spine">
+    <p>
+      The line below is the whole governance question. Everything on the left is backed by a
+      computation we can show. Everything on the right is not.
+    </p>
+  </div>
+
+  <div class="wide claims">
+    <div class="claim-col can">
+      <h3>Supported today</h3>
+      <ul>
+        <li>This mutation is valid and sits at this position in this canonical isoform.</li>
+        <li>Its AlphaMissense pathogenicity score is <em>X</em>, using the published thresholds.</li>
+        <li>We sourced this experimental structure, with this confidence at this residue.</li>
+        <li>These drugs target this protein, from these databases.</li>
+        <li>The mutation sits <em>N</em> Å from the pocket occupied by ligand <em>L</em> in that structure.</li>
+        <li>Therefore a direct-contact effect is, or is not, geometrically available.</li>
+        <li>Where it is not, these are the mechanisms we cannot assess.</li>
+      </ul>
+    </div>
+    <div class="claim-col cant">
+      <h3>Not supported</h3>
+      <ul>
+        <li>This mutation causes resistance to this drug.</li>
+        <li>Binding affinity changes by <em>X</em> kcal/mol.</li>
+        <li>This drug will still work / will stop working.</li>
+        <li>The mutation is <em>N</em> Å from <em>this specific drug</em> (unless it is the co-crystallised ligand).</li>
+        <li>Our pathogenicity score implies anything about drug response.</li>
+        <li>Any accuracy figure for our binding-delta prediction.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="spine">
+    <div class="note key">
+      <span class="label">The one-sentence position</span>
+      <p>
+        <em>"We measure, from experimental structure, whether a mutation can affect a drug by direct
+        contact — and we state plainly when it cannot, and what that leaves unexplained."</em>
+      </p>
+    </div>
+
+    <h3>Why this is the stronger pitch</h3>
+    <p>
+      A tool that declines to answer when it cannot is more trustworthy than one that always
+      produces a number. In a clinical-adjacent setting, a confident wrong answer is the failure
+      mode that matters — and the system's central rule already says it: never state a fact you did
+      not retrieve or compute.
+    </p>
+    <p>
+      We are not reporting a negative result. We are reporting a <em>correctly scoped</em> one,
+      with the measurements to back it.
+    </p>
+  </div>
+</section>
+
+<footer class="colophon">
+  <div>SecondLook Tier 2 · internal technical briefing</div>
+  <div>
+    Accuracy figures are drawn from the project's own research review and
+    <code>validation-plan.md</code>. Distances and deltas are measured outputs from the pipeline's
+    gold-standard run, reproducible via <code>validation/run_gold_standard.py</code>.
+  </div>
+  <div>
+    Pass rate against pre-committed criteria: <strong>0 of 9</strong>. The threshold was not
+    adjusted after seeing results.
+  </div>
+</footer>
+
+</div>
