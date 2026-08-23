@@ -84,6 +84,20 @@ def test_create_case_and_append_event_round_trip(session):
     assert events[0].id == event.id
 
 
+def test_create_case_persists_stage(session):
+    """Issue #51: cancer stage round-trips through Postgres. Nullable
+    when not given -- create_case's default matches the column's default.
+    """
+    from secondlook.case.store import CaseStore
+
+    store = CaseStore(session)
+    with_stage = store.create_case(label="Case E", cancer_type="NSCLC", stage="metastatic")
+    without_stage = store.create_case(label="Case F", cancer_type="NSCLC")
+
+    assert store.get_case(with_stage.id).stage == "metastatic"
+    assert store.get_case(without_stage.id).stage is None
+
+
 def test_append_event_rejects_unknown_event_type(session):
     from secondlook.case.store import CaseStore
 
