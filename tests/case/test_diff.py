@@ -24,43 +24,82 @@ from secondlook.case.diff import (
 from secondlook.case.evidence_state import EvidenceSnapshot
 from secondlook.case.state import (
     Alteration,
-    BiomarkerReading,
+    BiomarkerValue,
     CaseState,
     DiseaseAssessment,
-    Treatment,
+    TreatmentEntry,
 )
 
-EGFR_T790M = Alteration(gene="EGFR", variant="T790M", assay="NGS", event_id="evt-alt-1")
-EGFR_L858R = Alteration(gene="EGFR", variant="L858R", assay="NGS", event_id="evt-alt-2")
-KRAS_G12C = Alteration(gene="KRAS", variant="G12C", assay="PCR", event_id="evt-alt-3")
+EGFR_T790M = Alteration(
+    gene="EGFR",
+    variant="T790M",
+    variant_type=None,
+    assay="NGS",
+    tested_on=None,
+    event_id="evt-alt-1",
+)
+EGFR_L858R = Alteration(
+    gene="EGFR",
+    variant="L858R",
+    variant_type=None,
+    assay="NGS",
+    tested_on=None,
+    event_id="evt-alt-2",
+)
+KRAS_G12C = Alteration(
+    gene="KRAS",
+    variant="G12C",
+    variant_type=None,
+    assay="PCR",
+    tested_on=None,
+    event_id="evt-alt-3",
+)
 
-TMB_LOW = BiomarkerReading(value=8.0, event_id="evt-bio-1", unit="mut/Mb")
-TMB_HIGH = BiomarkerReading(value=16.0, event_id="evt-bio-2", unit="mut/Mb")
-TMB_MID = BiomarkerReading(value=9.5, event_id="evt-bio-3", unit="mut/Mb")
+TMB_LOW = BiomarkerValue(
+    name="TMB", value=8.0, unit="mut/Mb", measured_on=None, event_id="evt-bio-1"
+)
+TMB_HIGH = BiomarkerValue(
+    name="TMB", value=16.0, unit="mut/Mb", measured_on=None, event_id="evt-bio-2"
+)
+TMB_MID = BiomarkerValue(
+    name="TMB", value=9.5, unit="mut/Mb", measured_on=None, event_id="evt-bio-3"
+)
 
-OSI_STARTED = Treatment(regimen="osimertinib", event_id="evt-tx-1", action="started", line=1)
-OSI_STOPPED = Treatment(regimen="osimertinib", event_id="evt-tx-2", action="stopped", line=1)
-PEMBRO = Treatment(regimen="pembrolizumab", event_id="evt-tx-3", action="started", line=2)
+OSI_STARTED = TreatmentEntry(
+    regimen="osimertinib", line=1, action="started", reason=None, event_id="evt-tx-1"
+)
+OSI_STOPPED = TreatmentEntry(
+    regimen="osimertinib", line=1, action="stopped", reason=None, event_id="evt-tx-2"
+)
+PEMBRO = TreatmentEntry(
+    regimen="pembrolizumab", line=2, action="started", reason=None, event_id="evt-tx-3"
+)
 
-STABLE = DiseaseAssessment(status="stable", event_id="evt-dx-1", sites=("lung",))
-PROGRESSION = DiseaseAssessment(status="progression", event_id="evt-dx-2", sites=("lung", "liver"))
-RESPONSE = DiseaseAssessment(status="response", event_id="evt-dx-3", sites=("lung",))
+STABLE = DiseaseAssessment(status="stable", sites=["lung"], assessed_on=None, event_id="evt-dx-1")
+PROGRESSION = DiseaseAssessment(
+    status="progression", sites=["lung", "liver"], assessed_on=None, event_id="evt-dx-2"
+)
+RESPONSE = DiseaseAssessment(
+    status="response", sites=["lung"], assessed_on=None, event_id="evt-dx-3"
+)
 
 TMB_THRESHOLDS = {"TMB": 10.0}
 
 
 def _state(
     *,
+    case_id: str = "case-1",
     alterations: tuple[Alteration, ...] = (),
-    biomarkers: dict[str, BiomarkerReading] | None = None,
-    treatments: tuple[Treatment, ...] = (),
+    biomarkers: dict[str, BiomarkerValue] | None = None,
+    treatments: tuple[TreatmentEntry, ...] = (),
     assessment: DiseaseAssessment | None = None,
 ) -> CaseState:
     return CaseState(
+        case_id=case_id,
         alterations=alterations,
         biomarkers=biomarkers if biomarkers is not None else {},
         treatments=treatments,
-        latest_assessment=assessment,
+        assessments=(assessment,) if assessment is not None else (),
     )
 
 
@@ -130,7 +169,16 @@ def test_readding_existing_alteration_is_not_a_change():
 def test_same_gene_variant_different_assay_is_not_a_change():
     prev = _state(alterations=(EGFR_T790M,))
     current = _state(
-        alterations=(Alteration(gene="EGFR", variant="T790M", assay="ddPCR", event_id="evt-alt-9"),)
+        alterations=(
+            Alteration(
+                gene="EGFR",
+                variant="T790M",
+                variant_type=None,
+                assay="ddPCR",
+                tested_on=None,
+                event_id="evt-alt-9",
+            ),
+        )
     )
     result = _diff(prev, current)
     assert result.is_empty is True
@@ -205,26 +253,48 @@ def test_first_appearance_of_biomarker_is_not_a_crossing():
 
 
 def test_value_landing_exactly_on_threshold_is_a_crossing_from_below():
-    prev = _state(biomarkers={"TMB": BiomarkerReading(value=9.0, event_id="b1")})
-    current = _state(biomarkers={"TMB": BiomarkerReading(value=10.0, event_id="b2")})
+    prev = _state(
+        biomarkers={
+            "TMB": BiomarkerValue(name="TMB", value=9.0, unit=None, measured_on=None, event_id="b1")
+        }
+    )
+    current = _state(
+        biomarkers={
+            "TMB": BiomarkerValue(
+                name="TMB", value=10.0, unit=None, measured_on=None, event_id="b2"
+            )
+        }
+    )
     result = _diff(prev, current, thresholds=TMB_THRESHOLDS)
     assert len(result.changes) == 1
     assert result.changes[0].kind is ChangeKind.BIOMARKER_SHIFT
 
 
 def test_both_sides_at_or_above_threshold_is_not_a_crossing():
-    prev = _state(biomarkers={"TMB": BiomarkerReading(value=10.0, event_id="b1")})
-    current = _state(biomarkers={"TMB": BiomarkerReading(value=12.0, event_id="b2")})
+    prev = _state(
+        biomarkers={
+            "TMB": BiomarkerValue(
+                name="TMB", value=10.0, unit=None, measured_on=None, event_id="b1"
+            )
+        }
+    )
+    current = _state(
+        biomarkers={
+            "TMB": BiomarkerValue(
+                name="TMB", value=12.0, unit=None, measured_on=None, event_id="b2"
+            )
+        }
+    )
     result = _diff(prev, current, thresholds=TMB_THRESHOLDS)
     assert result.is_empty is True
 
 
 def test_biomarker_dict_insertion_order_does_not_affect_output():
-    tmb = BiomarkerReading(value=16.0, event_id="b-tmb")
-    msi = BiomarkerReading(value=40.0, event_id="b-msi")
+    tmb = BiomarkerValue(name="TMB", value=16.0, unit=None, measured_on=None, event_id="b-tmb")
+    msi = BiomarkerValue(name="MSI", value=40.0, unit=None, measured_on=None, event_id="b-msi")
     prev_low = {
-        "TMB": BiomarkerReading(value=8.0, event_id="p-tmb"),
-        "MSI": BiomarkerReading(value=5.0, event_id="p-msi"),
+        "TMB": BiomarkerValue(name="TMB", value=8.0, unit=None, measured_on=None, event_id="p-tmb"),
+        "MSI": BiomarkerValue(name="MSI", value=5.0, unit=None, measured_on=None, event_id="p-msi"),
     }
     thresholds = {"TMB": 10.0, "MSI": 20.0}
     forward = _diff(
@@ -276,7 +346,13 @@ def test_treatment_identity_is_case_insensitive_on_regimen():
     prev = _state(treatments=(OSI_STARTED,))
     current = _state(
         treatments=(
-            Treatment(regimen="Osimertinib", event_id="evt-tx-9", action="started", line=1),
+            TreatmentEntry(
+                regimen="Osimertinib",
+                line=1,
+                action="started",
+                reason=None,
+                event_id="evt-tx-9",
+            ),
         )
     )
     result = _diff(prev, current)
@@ -490,13 +566,23 @@ def test_compute_diff_is_byte_identical_across_100_runs():
     finding_b = _finding("f-b", assumptions=(BiomarkerBelow(name="TMB", threshold=10.0),))
     previous = _state(
         alterations=(EGFR_L858R,),
-        biomarkers={"MSI": BiomarkerReading(value=5.0, event_id="p-msi"), "TMB": TMB_LOW},
+        biomarkers={
+            "MSI": BiomarkerValue(
+                name="MSI", value=5.0, unit=None, measured_on=None, event_id="p-msi"
+            ),
+            "TMB": TMB_LOW,
+        },
         treatments=(),
         assessment=STABLE,
     )
     current = _state(
         alterations=(EGFR_L858R, EGFR_T790M),
-        biomarkers={"TMB": TMB_HIGH, "MSI": BiomarkerReading(value=40.0, event_id="c-msi")},
+        biomarkers={
+            "TMB": TMB_HIGH,
+            "MSI": BiomarkerValue(
+                name="MSI", value=40.0, unit=None, measured_on=None, event_id="c-msi"
+            ),
+        },
         treatments=(OSI_STARTED,),
         assessment=PROGRESSION,
     )
