@@ -161,7 +161,10 @@ class TestState:
 
     def test_unparseable_timestamp_is_dropped_not_fatal(self, tmp_path):
         path = tmp_path / "state.json"
-        path.write_text('{"last_success": {"civic": "never", "pubmed": "2026-08-23T12:00:00+00:00"}}')
+        path.write_text(
+            '{"last_success": {"civic": "never",'
+            ' "pubmed": "2026-08-23T12:00:00+00:00"}}'
+        )
         state = load_state(path)
         assert "civic" not in state
         assert state["pubmed"] == NOW

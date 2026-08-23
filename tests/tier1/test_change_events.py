@@ -2,8 +2,6 @@
 
 import json
 
-import pytest
-
 from secondlook.tier1.change_events import (
     CollectingChangeEventSink,
     JsonlChangeEventSink,
