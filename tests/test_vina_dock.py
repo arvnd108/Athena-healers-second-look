@@ -378,7 +378,13 @@ def test_score_binding_maps_vina_errors_to_binding_unavailable_message():
         sleeper=lambda _: None,
     )
     assert result.status == "unavailable"
-    assert result.error_message == BINDING_UNAVAILABLE_MESSAGE
+    # A receptor-prep failure must say so. It used to collapse into the generic
+    # "mCSM-lig and docking were both unavailable or inapplicable", which reads
+    # as a statement about the molecule rather than a structure-handling bug.
+    assert result.reason_code == "receptor_prep_failed"
+    assert "receptor structure could not be prepared" in result.error_message
+    assert "bad atoms" in result.error_message, "the underlying cause must survive"
+    assert result.error_message != BINDING_UNAVAILABLE_MESSAGE
 
 
 @pytest.mark.integration

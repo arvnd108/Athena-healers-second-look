@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import math
 import os
+import random
 import re
 import shutil
 import subprocess
@@ -20,7 +21,17 @@ from secondlook.binding import BindingScore, McsmPageError, chain_for_residue
 #: Per-dock wall clock. 120s is enough for a tiny ligand at exhaustiveness=1;
 #: a kinase inhibitor at exhaustiveness=32 is not (ABL1 T315I / imatinib timed
 #: out at 120s and scored in ~320s total for WT+mutant at 300s per dock).
-DEFAULT_TIMEOUT_SECONDS = 300.0
+#: Per docking run, not per candidate -- a wild-type/mutant pair costs two.
+#: Measured on 5HU9 chain A at DEFAULT_EXHAUSTIVENESS: a single run takes
+#: ~375s idle and well over 480s under load. At the previous 300s every
+#: attempt on that structure timed out, and because the timeout was swallowed
+#: (see binding._vina_or_unavailable) it surfaced as "docking was unavailable
+#: or inapplicable" -- a resource limit presented as a scientific refusal.
+#:
+#: 900s is a runaway guard with ~2.4x margin, not a budget. If
+#: reason_code="docking_timeout" starts appearing, raise this before drawing
+#: any conclusion about the chemistry.
+DEFAULT_TIMEOUT_SECONDS = 900.0
 DEFAULT_SEED = 1
 #: Vina's documentation recommends >=32 for consistent scores between runs; the
 #: default of 8 trades reproducibility for speed. Since the quantity we read is a
@@ -220,6 +231,28 @@ def chains_with_ligand(pdb_text: str) -> dict[str, int]:
     return best
 
 
+def min_residue_ligand_distance(pdb_text: str, position: int) -> float | None:
+    """Closest approach between the residue and a ligand, across every protomer.
+
+    A homodimer's copies can differ by several Angstrom (8C7X: 12.2 A in chain
+    A, 7.2 A in chain B). Measuring on the whole file conflates them; measuring
+    in one arbitrary chain can report the copy where the mutation sits furthest
+    from the drug. Taking the minimum over chains holding both the residue and a
+    ligand answers both -- and is the rule the proximity signal uses, so the
+    docking gate and the reported distance cannot disagree.
+    """
+    candidates = sorted(
+        set(chains_with_residue(pdb_text, position)) & set(chains_with_ligand(pdb_text))
+    )
+    distances = [
+        d
+        for chain in candidates
+        if (d := residue_min_distance_to_ligand(extract_chain(pdb_text, chain), position))
+        is not None
+    ]
+    return min(distances) if distances else residue_min_distance_to_ligand(pdb_text, position)
+
+
 def select_docking_chain(pdb_text: str, position: int) -> str:
     """Pick the chain to dock against: it must hold the residue *and* a ligand.
 
@@ -251,9 +284,26 @@ def select_docking_chain(pdb_text: str, position: int) -> str:
             f"(residue in {sorted(residue_chains)}, ligand in {sorted(ligand_chains) or 'none'}); "
             "cannot place a grid box on a pocket this mutation could affect"
         )
-    # Largest ligand wins — the biggest non-trivial HET group is the likeliest
-    # real drug-binding site rather than a buffer component that escaped _SKIP_HET.
-    return max(usable, key=lambda chain: ligand_chains[chain])
+    # Among the chains that qualify, dock in the protomer where the mutated
+    # residue is CLOSEST to that chain's ligand.
+    #
+    # Selecting on ligand size alone picks an arbitrary protomer on homodimers,
+    # and the copies do not always agree. Measured on 8C7X: BRAF V600 sits
+    # 12.2 A from the ligand in chain A and 7.2 A in chain B. Chain A loses to
+    # the 8 A contact gate, so the case was refused as "outside pocket" -- while
+    # the proximity signal on the same result reported 7.2 A. One result object
+    # carried both numbers, contradicting itself, and a case that should have
+    # docked did not.
+    #
+    # Closest approach is also the right question on its own terms: it is the
+    # protomer where the mutation can actually influence binding, which is what
+    # docking is being asked about. Ligand size remains the tie-break so the
+    # original buffer-component reasoning still applies when distances tie.
+    def _rank(chain: str) -> tuple[float, int]:
+        distance = residue_min_distance_to_ligand(extract_chain(pdb_text, chain), position)
+        return (distance if distance is not None else float("inf"), -ligand_chains[chain])
+
+    return min(usable, key=_rank)
 
 
 def extract_chain(pdb_text: str, chain: str) -> str:
@@ -906,11 +956,16 @@ def minimize_mutated_sidechain(
         integrator = openmm.LangevinIntegrator(
             300 * unit.kelvin, 1 / unit.picosecond, 0.002 * unit.picoseconds
         )
+        # Seeded and single-threaded for the same reason as _pdbfixer_complete:
+        # this minimization's output becomes the mutant receptor, so run-to-run
+        # drift here lands directly in the delta.
+        integrator.setRandomNumberSeed(DEFAULT_SEED)
+        platform = deterministic_cpu_platform() or openmm.Platform.getPlatformByName("CPU")
         simulation = app.Simulation(
             structure.topology,
             system,
             integrator,
-            openmm.Platform.getPlatformByName("CPU"),
+            platform,
         )
         simulation.context.setPositions(structure.positions)
         simulation.minimizeEnergy(maxIterations=max_iterations)
@@ -925,6 +980,27 @@ def minimize_mutated_sidechain(
         return pdb_text
 
 
+def deterministic_cpu_platform():
+    """OpenMM's CPU platform, pinned to a single thread.
+
+    The CPU platform sums forces across threads in whatever order they finish.
+    Floating-point addition is not associative, so a multi-threaded energy
+    minimization takes a slightly different path on every run and lands on
+    slightly different coordinates. Those coordinates become the docking
+    receptor, so the difference reaches the score.
+
+    Returns None when OpenMM is unavailable, so callers fall back to the library
+    default rather than failing.
+    """
+    try:
+        import openmm
+    except ImportError:
+        return None
+    platform = openmm.Platform.getPlatformByName("CPU")
+    platform.setPropertyDefaultValue("Threads", "1")
+    return platform
+
+
 def _pdbfixer_complete(pdb_text: str, mutations: list[str] | None, chain: str | None) -> str:
     try:
         from openmm.app import PDBFile
@@ -932,6 +1008,9 @@ def _pdbfixer_complete(pdb_text: str, mutations: list[str] | None, chain: str | 
     except ImportError as exc:
         raise ReceptorPrepError("pdbfixer/openmm is not installed") from exc
     fixer = PDBFixer(pdbfile=StringIO(pdb_text))
+    _platform = deterministic_cpu_platform()
+    if _platform is not None:
+        fixer.platform = _platform
     if mutations and chain is not None:
         fixer.applyMutations(mutations, chain)
     fixer.findMissingResidues()
@@ -939,8 +1018,16 @@ def _pdbfixer_complete(pdb_text: str, mutations: list[str] | None, chain: str | 
     fixer.findNonstandardResidues()
     fixer.replaceNonstandardResidues()
     fixer.findMissingAtoms()
-    fixer.addMissingAtoms()
-    fixer.addMissingHydrogens(PHYSIOLOGICAL_PH)
+    fixer.addMissingAtoms(seed=DEFAULT_SEED)
+    # Save and restore the RNG state: seeding is needed for reproducible
+    # hydrogen placement, but silently resetting the process-wide RNG would be a
+    # surprising side effect for any caller that also uses `random`.
+    _rng_state = random.getstate()
+    try:
+        random.seed(DEFAULT_SEED)
+        fixer.addMissingHydrogens(PHYSIOLOGICAL_PH)
+    finally:
+        random.setstate(_rng_state)
     out = StringIO()
     PDBFile.writeFile(fixer.topology, fixer.positions, out, keepIds=True)
     return out.getvalue()

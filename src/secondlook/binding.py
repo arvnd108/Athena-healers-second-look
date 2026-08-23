@@ -75,7 +75,59 @@ class McsmLigResult:
 #: from a permanent structural fact that no retry can change — the pipeline maps
 #: this to `FailureObject.retryable`, and string-matching the message would be
 #: fragile since the out-of-pocket text embeds a measured distance.
-BindingReasonCode = Literal["unavailable", "outside_pocket", "mechanism_invalidated"]
+BindingReasonCode = Literal[
+    "unavailable",
+    "outside_pocket",
+    "mechanism_invalidated",
+    "docking_timeout",
+    "receptor_prep_failed",
+    "ligand_prep_failed",
+    "mutant_placement_failed",
+    "no_binding_site",
+    "docking_failed",
+]
+
+#: Docking failures used to collapse into BINDING_UNAVAILABLE_MESSAGE, which
+#: made a timeout indistinguishable from a receptor-prep bug and from a genuine
+#: "this chemistry cannot be docked". They mean completely different things --
+#: one is a setting, one is a bug, one is a scientific limit -- and a reader
+#: cannot act on the result without knowing which.
+DOCKING_TIMEOUT_MESSAGE = (
+    "Docking did not finish within the {timeout:.0f}s limit, so no binding-affinity "
+    "delta was computed. This is a resource limit, NOT a statement about the "
+    "molecule: the calculation was cut off, not refused. Raising the docking "
+    "timeout may allow this candidate to score. AlphaMissense functional score "
+    "and structural context remain available."
+)
+
+RECEPTOR_PREP_FAILED_MESSAGE = (
+    "The receptor structure could not be prepared for docking ({detail}). This is "
+    "a structure-handling failure, not a property of the drug or the mutation. "
+    "AlphaMissense functional score and structural context remain available."
+)
+
+LIGAND_PREP_FAILED_MESSAGE = (
+    "The candidate's chemical structure could not be prepared for docking "
+    "({detail}). Usually an unparseable or unsupported SMILES. AlphaMissense "
+    "functional score and structural context remain available."
+)
+
+MUTANT_PLACEMENT_FAILED_MESSAGE = (
+    "The mutant side chain could not be placed on this structure ({detail}), so "
+    "there is no mutant receptor to compare against the wild type. AlphaMissense "
+    "functional score and structural context remain available."
+)
+
+NO_BINDING_SITE_MESSAGE = (
+    "No ligand-bound pocket could be located in this structure, so there is no "
+    "grid box to dock into ({detail}). AlphaMissense functional score and "
+    "structural context remain available."
+)
+
+DOCKING_FAILED_MESSAGE = (
+    "Docking failed to produce a score ({detail}). AlphaMissense functional score "
+    "and structural context remain available."
+)
 
 
 @dataclass(frozen=True)
@@ -357,8 +409,13 @@ def _vina_or_unavailable(
 ) -> BindingScore:
     from secondlook.vina_dock import (
         MUTATION_CONTACT_MAX_ANGSTROM,
+        LigandPrepError,
+        MutantPlacementError,
         MutationOutsidePocketError,
-        residue_min_distance_to_ligand,
+        NoBindingSiteError,
+        ReceptorPrepError,
+        VinaTimeoutError,
+        min_residue_ligand_distance,
     )
 
     if not candidate.smiles or not structure.pdb_text or validation.position is None:
@@ -373,7 +430,10 @@ def _vina_or_unavailable(
     except MutationOutsidePocketError:
         # Not a failure — an informative negative result. Reporting it as
         # "scoring was unavailable" would misstate why there is no number.
-        distance = residue_min_distance_to_ligand(structure.pdb_text, validation.position)
+        # Measured the way select_docking_chain now chooses -- closest approach
+        # across protomers. Measuring on the whole file would quote a larger
+        # distance than the one the refusal was actually based on.
+        distance = min_residue_ligand_distance(structure.pdb_text, validation.position)
         return _unavailable(
             MUTATION_OUTSIDE_POCKET_MESSAGE.format(
                 distance=distance if distance is not None else float("nan"),
@@ -381,8 +441,41 @@ def _vina_or_unavailable(
             ),
             reason_code="outside_pocket",
         )
-    except vina_error:
-        return _unavailable(BINDING_UNAVAILABLE_MESSAGE)
+    except VinaTimeoutError:
+        # Deliberately first: a timeout is the failure that looks like a
+        # scientific refusal but is really a setting. Reporting it as "docking
+        # was inapplicable" turns a resource limit into a false claim about the
+        # molecule.
+        return _unavailable(
+            DOCKING_TIMEOUT_MESSAGE.format(
+                timeout=getattr(vina_client, "timeout_seconds", 0.0)
+            ),
+            reason_code="docking_timeout",
+        )
+    except ReceptorPrepError as exc:
+        return _unavailable(
+            RECEPTOR_PREP_FAILED_MESSAGE.format(detail=exc),
+            reason_code="receptor_prep_failed",
+        )
+    except LigandPrepError as exc:
+        return _unavailable(
+            LIGAND_PREP_FAILED_MESSAGE.format(detail=exc), reason_code="ligand_prep_failed"
+        )
+    except MutantPlacementError as exc:
+        return _unavailable(
+            MUTANT_PLACEMENT_FAILED_MESSAGE.format(detail=exc),
+            reason_code="mutant_placement_failed",
+        )
+    except NoBindingSiteError as exc:
+        return _unavailable(
+            NO_BINDING_SITE_MESSAGE.format(detail=exc), reason_code="no_binding_site"
+        )
+    except vina_error as exc:
+        # VinaRunError and anything else deriving from VinaError. Records the
+        # detail rather than discarding it.
+        return _unavailable(
+            DOCKING_FAILED_MESSAGE.format(detail=exc), reason_code="docking_failed"
+        )
 
 
 def _unavailable(message: str, reason_code: BindingReasonCode = "unavailable") -> BindingScore:
