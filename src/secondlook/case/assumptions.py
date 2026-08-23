@@ -123,10 +123,13 @@ class DrugNotYetTried:
 @dataclass(frozen=True)
 class DiseaseNotProgressing:
     def holds(self, case: CaseState, evidence: EvidenceSnapshot) -> bool:
-        assessment = case.latest_assessment
-        if assessment is None:
+        # `CaseState.latest_assessment` (Subsystem C) is the status string
+        # itself, not the DiseaseAssessment object -- see the comment on
+        # `triggering_event` below for where the underlying event is found.
+        status = case.latest_assessment
+        if status is None:
             return True
-        return assessment.status != "progression"
+        return status != "progression"
 
     def describe(self) -> str:
         return "disease not recorded as progressing"
@@ -138,8 +141,11 @@ class DiseaseNotProgressing:
         return frozenset()
 
     def triggering_event(self, case: CaseState) -> str:
-        assessment = case.latest_assessment
-        return assessment.event_id if assessment is not None else ""
+        # `latest_assessment` only exposes the status string (Subsystem C's
+        # CaseState). The full DiseaseAssessment record -- and its event_id
+        # -- is the last entry of `case.assessments`, which is kept in
+        # occurred_at order by `fold_events`.
+        return case.assessments[-1].event_id if case.assessments else ""
 
 
 @dataclass(frozen=True)

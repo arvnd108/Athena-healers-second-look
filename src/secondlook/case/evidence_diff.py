@@ -105,7 +105,9 @@ def _finding_broken_by_event(
     evidence: EvidenceSnapshot,
 ) -> bool:
     """Re-evaluate only assumptions whose keys match this event, not all."""
-    case = finding.case_state if finding.case_state is not None else CaseState()
+    # CaseState.case_id is required (Subsystem C); "" is an explicit sentinel
+    # for "no real case state available", not a stand-in for a real case.
+    case = finding.case_state if finding.case_state is not None else CaseState(case_id="")
     for assumption in finding.assumptions:
         if not _assumption_matches_event(
             assumption, change_event.gene, change_event.variant_or_drug

@@ -123,8 +123,10 @@ def compute_diff(
             )
 
     # 4. Disease assessment changes — a new or different recorded status.
-    prev_status = _assessment_status(previous)
-    assessment = current.latest_assessment
+    # `CaseState.latest_assessment` (Subsystem C) is just the status string;
+    # the full record (for its event_id and sites) is `assessments[-1]`.
+    prev_status = previous.latest_assessment
+    assessment = current.assessments[-1] if current.assessments else None
     if assessment is not None and assessment.status != prev_status:
         changes.append(
             Change(
@@ -132,7 +134,7 @@ def compute_diff(
                 summary=_disease_summary(assessment),
                 detail={
                     "status": assessment.status,
-                    "sites": list(assessment.sites),
+                    "sites": list(assessment.sites or ()),
                     "from": prev_status,
                 },
                 triggering_event_id=assessment.event_id,
@@ -166,13 +168,6 @@ def compute_diff(
         supersessions=tuple(supersessions),
         unchanged_reason=None if (changes or supersessions) else UNCHANGED_REASON,
     )
-
-
-def _assessment_status(state: CaseState) -> str | None:
-    assessment = state.latest_assessment
-    if assessment is None:
-        return None
-    return assessment.status
 
 
 def _disease_summary(assessment: DiseaseAssessment) -> str:
