@@ -46,6 +46,7 @@ class CaseStore:
         age_years: int | None = None,
         primary_site: str | None = None,
         histology: str | None = None,
+        stage: str | None = None,
         doid: str | None = None,
     ) -> Case:
         case = Case(
@@ -55,6 +56,7 @@ class CaseStore:
             age_years=age_years,
             primary_site=primary_site,
             histology=histology,
+            stage=stage,
             doid=doid,
             created_at=datetime.now(UTC),
         )
