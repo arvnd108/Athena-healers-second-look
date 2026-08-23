@@ -57,3 +57,18 @@ def test_case_events_has_no_update_marker_and_is_append_only_by_convention():
     case_events = Base.metadata.tables["case_events"]
     constraint_names = {c.name for c in case_events.constraints}
     assert "no_update" in constraint_names
+
+
+# --- issue #51: cancer stage was missing from the original schema ----------
+
+
+def test_cases_table_has_a_nullable_stage_column():
+    """Added per issue #51 -- patient-schema-mvp.md SS1 lists stage as P0,
+    but it was never in IMPLEMENTATION_PLAN.md SS2.2's original schema.
+    Nullable, not NOT NULL like cancer_type -- see the Case.stage inline
+    comment in models.py for why a DB-level required constraint isn't the
+    right call here yet.
+    """
+    cases = Base.metadata.tables["cases"]
+    assert "stage" in cases.columns
+    assert cases.columns["stage"].nullable is True

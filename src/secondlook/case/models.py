@@ -78,6 +78,17 @@ class Case(Base):
     cancer_type: Mapped[str] = mapped_column(Text, nullable=False)  # P0
     primary_site: Mapped[str | None] = mapped_column(Text, nullable=True)
     histology: Mapped[str | None] = mapped_column(Text, nullable=True)
+    stage: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # P0 per patient-schema-mvp.md SS1 ("Stage / extent of disease"), but
+    # nullable here rather than NOT NULL like cancer_type -- this column
+    # did not exist in IMPLEMENTATION_PLAN.md SS2.2's original schema (see
+    # issue #51), and a NOT NULL migration on a table that may already have
+    # rows would fail without a default value nobody has decided on yet.
+    # Free text, not an enum: no stage taxonomy (TNM, localized/metastatic,
+    # or otherwise) is defined anywhere else in this codebase to constrain
+    # it against. Enforcing "required at all" is an application/API-layer
+    # decision for whoever builds case creation, not a DB constraint this
+    # migration should invent unilaterally.
     doid: Mapped[str | None] = mapped_column(String(64), nullable=True)  # joins to FalkorDB Disease
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), nullable=False)
 
