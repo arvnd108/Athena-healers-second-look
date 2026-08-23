@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability or suspected PHI/PII exposure
+    url: https://github.com/healers-second-look/Athena/security/advisories/new
+    about: Do not open a public issue for this. Use private reporting instead — see SECURITY.md and POLICY.md §5.5.

@@ -1,0 +1,43 @@
+name: Feature Request
+description: Propose new functionality that isn't already tracked as a subsystem issue.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing: check whether this is already covered by one of the
+        tracked subsystem issues (filter by the `feature` label and the
+        relevant `area:` label). If it is, comment there instead of opening
+        a new issue.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Ground this in an actual gap, not just "it would be nice." Reference `ARCHITECTURE.md` or a subsystem issue if relevant.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed approach
+      description: Interfaces (in/out), deliverables, and how it fits the existing architecture (e.g., which subsystem it extends).
+    validations:
+      required: true
+
+  - type: textarea
+    id: caveats
+    attributes:
+      label: Caveats / risks
+      description: Any clinical-safety, data-handling, or licensing implications? See `POLICY.md`.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I checked existing subsystem issues (`feature` label) and this isn't already covered.
+          required: true
+        - label: This proposal doesn't require patient data sources excluded by `docs/data-sources.md` (e.g., NCCN, OncoKB, DrugBank).
+          required: true

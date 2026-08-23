@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Offline test suite (Python 3.11)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          # README.md notes 3.12+ is untested; pin to 3.11 until that's verified.
+
+      - name: Install package (core + dev)
+        run: pip install -e ".[dev]"
+
+      - name: Run offline unit tests
+        run: pytest -q
+        # Integration tests (marked @pytest.mark.integration) hit live
+        # external services and a running FalkorDB instance — they are
+        # deselected by default per README.md §4 and are intentionally
+        # NOT run in this workflow. See docs/local-setup.md if a future
+        # workflow adds a FalkorDB service container for them.
+
+      - name: Lint (ruff)
+        run: ruff check .
+        continue-on-error: true
+        # Non-blocking until the codebase is confirmed clean under ruff;
+        # flip to blocking once that's verified by a maintainer.
+
+      - name: Format check (black)
+        run: black --check .
+        continue-on-error: true
+        # Same rationale as ruff above.
