@@ -19,8 +19,15 @@ jobs:
           python-version: "3.11"
           # README.md notes 3.12+ is untested; pin to 3.11 until that's verified.
 
-      - name: Install package (core + dev)
-        run: pip install -e ".[dev]"
+      - name: Install package (core + dev + api)
+        run: pip install -e ".[dev,api]"
+        # `api` (sqlalchemy, alembic, psycopg, fastapi, uvicorn, pydantic,
+        # anthropic — see pyproject.toml) is required even for the OFFLINE
+        # suite: tests/case/test_models.py imports secondlook.case.models,
+        # which imports sqlalchemy at module level. Without this group,
+        # collection fails with ModuleNotFoundError before any test runs,
+        # regardless of the `integration` marker deselecting the live-DB
+        # tests in tests/case/test_store.py.
 
       - name: Install offline-only structural test dependencies
         run: pip install rdkit meeko openmm pdbfixer scipy gemmi
