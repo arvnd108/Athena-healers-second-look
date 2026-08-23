@@ -1,0 +1,112 @@
+# Extraction-accuracy eval set for the intake pipeline (subsystem R),
+# ready for the LLM Decision-Quality & Safety Monitoring Harness (subsystem
+# P, not yet built) to consume, following the same pattern as subsystem F's
+# criteria-extraction eval fixtures.
+#
+# Every document below is SYNTHETIC/FICTIONAL. This is a hard requirement,
+# not a convention -- POLICY.md SS5.1 prohibits real patient documents (even
+# redacted ones) anywhere in this repository. Unlike tier1/eval/ground_truth.yaml
+# (which must use real, live-loaded data because it tests retrieval against
+# an actual graph), this eval set tests extraction from document TEXT, and
+# there is no way to source that text without either using real clinical
+# documents (prohibited) or writing synthetic ones (what's here).
+#
+# config_version exists so a prompt-version bump (ClaudeExtractionBackend's
+# _PROMPTS dict, or any future replacement) can be checked against this set
+# without ambiguity about which prompt version a pass/fail rate applies to.
+config_version: "2026-08-23.1"
+#
+# Schema per case:
+#   id                the fixture's stable identifier
+#   document_type     pathology | sequencing | clinical_note
+#   document_text     synthetic document text, fed to the backend under test
+#   expected_events    list of expected ExtractedEventCandidate-shaped dicts:
+#     event_type        one of case/models.py's EVENT_TYPES
+#     fields            dict of field_name -> expected value (confidence not
+#                       checked here -- accuracy eval checks VALUE
+#                       correctness; confidence CALIBRATION is a separate,
+#                       harder measurement for subsystem P to design)
+
+cases:
+  - id: sequencing_egfr_missense
+    document_type: sequencing
+    document_text: >
+      NGS Panel Report (synthetic). Tumor tissue NGS identified EGFR
+      c.2369C>T (p.Thr790Met), classified as missense, VAF 34%. Assay:
+      50-gene solid tumor NGS panel. Specimen collected and tested
+      2026-02-14.
+    expected_events:
+      - event_type: ALTERATION_OBSERVED
+        fields:
+          gene: "EGFR"
+          variant: "T790M"
+          variant_type: "missense"
+          assay: "50-gene solid tumor NGS panel"
+          tested_on: "2026-02-14"
+
+  - id: sequencing_biomarker_pdl1
+    document_type: sequencing
+    document_text: >
+      NGS Panel Report (synthetic). PD-L1 tumor proportion score (TPS):
+      62% (measured 2026-01-05). No actionable fusions detected in this
+      panel.
+    expected_events:
+      - event_type: BIOMARKER_MEASURED
+        fields:
+          name: "PD-L1"
+          value: 62.0
+          unit: "%"
+          measured_on: "2026-01-05"
+
+  - id: pathology_ihc_marker
+    document_type: pathology
+    document_text: >
+      Pathology Report (synthetic). Immunohistochemistry: HER2 IHC 3+
+      (positive), performed 2026-03-02. Histologic type: invasive ductal
+      carcinoma.
+    expected_events:
+      - event_type: BIOMARKER_MEASURED
+        fields:
+          name: "HER2 IHC"
+          value: 3.0
+          unit: "IHC score"
+          measured_on: "2026-03-02"
+
+  - id: pathology_alteration_reflex_test
+    document_type: pathology
+    document_text: >
+      Pathology Report (synthetic). Reflex molecular testing identified a
+      KIT exon 11 in-frame deletion, classified as indel, via
+      Sanger sequencing, tested 2026-02-20.
+    expected_events:
+      - event_type: ALTERATION_OBSERVED
+        fields:
+          gene: "KIT"
+          variant: "exon 11 deletion"
+          variant_type: "indel"
+          assay: "Sanger sequencing"
+          tested_on: "2026-02-20"
+
+  - id: clinical_note_treatment_stopped
+    document_type: clinical_note
+    document_text: >
+      Clinical Note (synthetic). Patient discontinued imatinib (line 1)
+      today due to disease progression on restaging CT.
+    expected_events:
+      - event_type: TREATMENT_LINE
+        fields:
+          regimen: "imatinib"
+          line: 1
+          action: "stopped"
+          reason: "progression"
+
+  - id: clinical_note_open_question
+    document_type: clinical_note
+    document_text: >
+      Clinical Note (synthetic). Discussed case at tumor board. Open
+      question: is there a targeted option given the newly identified
+      NTRK3 fusion?
+    expected_events:
+      - event_type: CLINICAL_QUESTION
+        fields:
+          text: "Is there a targeted option given the newly identified NTRK3 fusion?"
