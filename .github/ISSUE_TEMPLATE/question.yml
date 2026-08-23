@@ -1,0 +1,21 @@
+name: Question / Support
+description: Ask a usage or setup question.
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Check `SUPPORT.md` and `README.md` §8 (Troubleshooting) first —
+        most setup questions are already answered there.
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: What have you already tried / read?
