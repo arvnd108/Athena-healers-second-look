@@ -38,6 +38,10 @@ from secondlook.signals.types import DocumentedSource, RegulatorySource, Signal
 from secondlook.synthesis.citation_gate import enforce_citations
 from secondlook.synthesis.llm_client import LLMClient, LLMClientError
 
+# Versioned id for this prompt text. The eval harness imports this rather
+# than duplicating a string; bump it when SYNTHESIS_SYSTEM_PROMPT changes.
+SYSTEM_PROMPT_VERSION = "synthesis/v1"
+
 # Fixed text -- not a per-call override. Mirrors the shared-constant
 # disclaimer pattern used for Tier 2 structural signals.
 SYNTHESIS_SYSTEM_PROMPT = (
