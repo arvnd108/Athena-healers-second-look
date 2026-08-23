@@ -19,11 +19,22 @@ dockable structure was found:
 |---|---|---|---|
 | EGFR T790M | 3.5 A | gatekeeper, direct contact | in_contact |
 | EGFR C797S | 10.1 A | covalent-site loss | distant |
-| BRAF V600E | 12.2 A | conformational activation | distant |
+| BRAF V600E | 7.2 A | conformational activation | pocket_adjacent |
 | KIT D816V | 16.6 A | activation-loop, allosteric | distant |
 
-The two mechanisms docking cannot represent (BRAF V600E conformational, KIT D816V
-allosteric) are precisely the ones this correctly places out of contact range.
+**BRAF V600E was previously recorded here as 12.2 A / `distant`, and that was
+wrong.** 8C7X is a homodimer whose two copies disagree — 12.2 A in chain A,
+7.2 A in chain B — and the pipeline was reporting whichever copy a chain-ordering
+rule written for docking happened to return. The closest approach is 7.2 A, which
+is `pocket_adjacent`, not `distant`.
+
+That correction weakens a claim this docstring used to make. It is not true that
+this signal cleanly places every mechanism docking cannot represent out of contact
+range: BRAF V600E acts conformationally and yet sits 7.2 A from the ligand, inside
+the range where a direct-contact effect is geometrically available. KIT D816V at
+16.6 A still is correctly placed out of range. The honest version of the claim is
+narrower — proximity says whether direct contact is *geometrically possible*, and
+a mutation can be close and still act by another mechanism entirely.
 
 **What this does not claim.** Proximity is not a prediction of resistance or
 sensitivity. A mutation in the pocket may leave binding untouched; a distant one
@@ -33,7 +44,7 @@ mechanism is geometrically available, and nothing further.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Literal
 
 ProximityBand = Literal["in_contact", "pocket_adjacent", "distant", "unknown"]
@@ -106,11 +117,38 @@ class ProximitySignal:
     #: has no co-crystallized ligand, so proximity is not measurable from one —
     #: this is always True when `band` is not "unknown".
     from_experimental_structure: bool
+    #: Per-chain distance for every protomer holding both the residue and a
+    #: ligand. A crystal often contains several copies of the same protein, and
+    #: they do not always agree: 8C7X puts BRAF V600 12.2 A from the ligand in
+    #: chain A and 7.2 A in chain B. Reporting one copy's number as "the"
+    #: distance hides that, and which copy you get depends on chain-ordering
+    #: rules written for a different purpose.
+    protomer_distances: dict[str, float] = field(default_factory=dict)
 
     @property
     def contact_mechanism_available(self) -> bool:
         """Whether a direct-contact effect on this drug is geometrically possible."""
         return self.band in ("in_contact", "pocket_adjacent")
+
+    @property
+    def protomers_disagree(self) -> bool:
+        """True when the copies fall in different bands.
+
+        Deliberately band-based rather than a numeric threshold: a 1 A spread
+        entirely inside `in_contact` changes no conclusion, while a 0.2 A spread
+        straddling 8.0 A changes `pocket_adjacent` into `distant` and with it
+        whether a docking delta is even attempted.
+        """
+        bands = {classify_proximity(d) for d in self.protomer_distances.values()}
+        return len(bands) > 1
+
+    @property
+    def distance_range_angstrom(self) -> tuple[float, float] | None:
+        """(closest, furthest) across protomers, or None if fewer than two."""
+        if len(self.protomer_distances) < 2:
+            return None
+        values = self.protomer_distances.values()
+        return (min(values), max(values))
 
 
 def classify_proximity(distance_angstrom: float | None) -> ProximityBand:
@@ -144,20 +182,51 @@ def build_proximity_signal(
     structure_source: str | None,
     measured_to_ligand: str | None = None,
     candidate_drug_het_code: str | None = None,
+    protomer_distances: dict[str, float] | None = None,
 ) -> ProximitySignal:
+    protomer_distances = dict(protomer_distances or {})
+    # Per-chain measurements win over a single passed-in value: one number
+    # cannot represent a multimer, and the caller that supplied per-chain data
+    # measured them all rather than picking one.
+    #
+    # The closest approach is reported because it is the permissive reading —
+    # the copy in which a direct-contact mechanism is most plausible. Reporting
+    # the furthest, or an arbitrary copy, would let the pipeline rule out a
+    # mechanism that the structure shows is available. This is also the rule
+    # `vina_dock.min_residue_ligand_distance` uses, so the reported distance and
+    # the docking contact gate cannot disagree.
+    if protomer_distances:
+        distance_angstrom = min(protomer_distances.values())
+
     band = classify_proximity(distance_angstrom)
     is_candidate = bool(
         measured_to_ligand
         and candidate_drug_het_code
         and measured_to_ligand.upper() == candidate_drug_het_code.upper()
     )
+    description = describe_proximity(band, distance_angstrom, measured_to_ligand)
+    if len({classify_proximity(d) for d in protomer_distances.values()}) > 1:
+        # Stated in the description, not left for a reader to infer from a field
+        # they may never look at. A band that depends on which copy you measured
+        # is not a settled fact and must not read as one.
+        detail = ", ".join(
+            f"chain {chain} {value:.1f} A"
+            for chain, value in sorted(protomer_distances.items())
+        )
+        description += (
+            f" This structure holds {len(protomer_distances)} copies of the "
+            f"protein and they do not agree ({detail}); the closest approach is "
+            "reported, and the band should be treated as the most permissive "
+            "reading rather than a settled fact."
+        )
     return ProximitySignal(
         band=band,
         distance_angstrom=distance_angstrom,
-        description=describe_proximity(band, distance_angstrom, measured_to_ligand),
+        description=description,
         structure_id=structure_id,
         structure_source=structure_source,
         measured_to_ligand=measured_to_ligand,
         ligand_is_candidate_drug=is_candidate,
         from_experimental_structure=band != "unknown",
+        protomer_distances=protomer_distances,
     )

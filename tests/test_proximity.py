@@ -171,3 +171,76 @@ def test_two_different_drugs_on_one_structure_share_the_pocket_measurement():
     assert a.distance_angstrom == b.distance_angstrom
     assert a.description == b.description
     assert not a.ligand_is_candidate_drug and not b.ligand_is_candidate_drug
+
+
+# --- homodimer protomers ------------------------------------------------------
+#
+# A crystal often holds several copies of the protein and they do not always
+# agree. 8C7X puts BRAF V600 12.2 A from the ligand in chain A and 7.2 A in
+# chain B -- which straddles the 8 A band boundary, so which copy was measured
+# decided whether the mutation read as `pocket_adjacent` or `distant`.
+
+from secondlook.proximity import build_proximity_signal  # noqa: E402
+
+
+def _signal(protomers, **kw):
+    return build_proximity_signal(
+        None, structure_id="8C7X", structure_source="PDB",
+        measured_to_ligand="TXV", protomer_distances=protomers, **kw,
+    )
+
+
+def test_closest_protomer_is_reported():
+    """The permissive reading: the copy where a contact mechanism is most
+    plausible. Reporting the furthest would rule out a mechanism the structure
+    shows is available."""
+    signal = _signal({"A": 12.2452, "B": 7.2077})
+    assert signal.distance_angstrom == pytest.approx(7.2077)
+    assert signal.band == "pocket_adjacent"
+
+
+def test_per_chain_values_win_over_a_single_passed_in_distance():
+    """One number cannot represent a multimer."""
+    signal = build_proximity_signal(
+        99.0, structure_id="8C7X", structure_source="PDB",
+        protomer_distances={"A": 12.2, "B": 7.2},
+    )
+    assert signal.distance_angstrom == pytest.approx(7.2)
+
+
+def test_disagreement_is_stated_in_the_description():
+    """A band that depends on which copy you measured is not a settled fact and
+    must not read as one."""
+    description = _signal({"A": 12.2452, "B": 7.2077}).description
+    assert "do not agree" in description
+    assert "chain A 12.2" in description
+    assert "chain B 7.2" in description
+
+
+def test_disagreement_is_band_based_not_a_numeric_threshold():
+    """A 1 A spread inside one band changes no conclusion; a 0.2 A spread across
+    a boundary changes whether a docking delta is even attempted."""
+    wide_same_band = _signal({"A": 2.0, "B": 3.5})       # both in_contact
+    narrow_across = _signal({"A": 7.9, "B": 8.1})        # straddles 8.0
+    assert not wide_same_band.protomers_disagree
+    assert narrow_across.protomers_disagree
+    assert "do not agree" not in wide_same_band.description
+
+
+def test_single_protomer_has_no_range_and_no_disagreement():
+    signal = _signal({"A": 7.2})
+    assert signal.distance_range_angstrom is None
+    assert not signal.protomers_disagree
+
+
+def test_range_reports_closest_and_furthest():
+    assert _signal({"A": 12.2, "B": 7.2, "C": 9.0}).distance_range_angstrom == (7.2, 12.2)
+
+
+def test_no_protomer_data_behaves_as_before():
+    signal = build_proximity_signal(
+        3.5, structure_id="8A27", structure_source="PDB", measured_to_ligand="KY9"
+    )
+    assert signal.distance_angstrom == pytest.approx(3.5)
+    assert signal.protomer_distances == {}
+    assert not signal.protomers_disagree
