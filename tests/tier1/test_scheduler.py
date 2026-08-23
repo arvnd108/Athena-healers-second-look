@@ -37,14 +37,17 @@ class TestConfig:
     def test_interval_without_a_reason_is_rejected(self, tmp_path):
         """A cadence with no stated reason is a number nobody can review later."""
         path = tmp_path / "s.yaml"
-        path.write_text(yaml.safe_dump({"sources": {"civic": {"interval_hours": 24}}}))
+        path.write_text(
+            yaml.safe_dump({"sources": {"civic": {"interval_hours": 24}}}), encoding="utf-8"
+        )
         with pytest.raises(ScheduleConfigError, match="reason"):
             load_schedule(path)
 
     def test_non_positive_interval_is_rejected(self, tmp_path):
         path = tmp_path / "s.yaml"
         path.write_text(
-            yaml.safe_dump({"sources": {"civic": {"interval_hours": 0, "reason": "x"}}})
+            yaml.safe_dump({"sources": {"civic": {"interval_hours": 0, "reason": "x"}}}),
+            encoding="utf-8",
         )
         with pytest.raises(ScheduleConfigError, match="positive"):
             load_schedule(path)
@@ -179,13 +182,14 @@ class TestState:
         """Re-running is merely expensive; refusing to run means the graph
         silently stops updating."""
         path = tmp_path / "state.json"
-        path.write_text("{not json")
+        path.write_text("{not json", encoding="utf-8")
         assert load_state(path) == {}
 
     def test_unparseable_timestamp_is_dropped_not_fatal(self, tmp_path):
         path = tmp_path / "state.json"
         path.write_text(
-            '{"last_success": {"civic": "never",' ' "pubmed": "2026-08-23T12:00:00+00:00"}}'
+            '{"last_success": {"civic": "never",' ' "pubmed": "2026-08-23T12:00:00+00:00"}}',
+            encoding="utf-8",
         )
         state = load_state(path)
         assert "civic" not in state
