@@ -147,6 +147,28 @@ EVIDENCE_ITEM = NodeType(
     ),
 )
 
+#: ClinicalTrials.gov's `overallStatus` vocabulary. Bounded because
+#: `recruiting` vs `active, not recruiting` decides whether a patient can be
+#: referred at all -- a typo or an unmapped upstream value must fail loudly
+#: rather than quietly render as "not recruiting".
+TRIAL_STATUSES: frozenset[str] = frozenset(
+    {
+        "NOT_YET_RECRUITING",
+        "RECRUITING",
+        "ENROLLING_BY_INVITATION",
+        "ACTIVE_NOT_RECRUITING",
+        "SUSPENDED",
+        "TERMINATED",
+        "COMPLETED",
+        "WITHDRAWN",
+        "AVAILABLE",
+        "NO_LONGER_AVAILABLE",
+        "TEMPORARILY_NOT_AVAILABLE",
+        "APPROVED_FOR_MARKETING",
+        "UNKNOWN",
+    }
+)
+
 TRIAL = NodeType(
     "Trial",
     (
@@ -157,6 +179,23 @@ TRIAL = NodeType(
         "locations",
         "country_codes",
         "eligibility_url",
+        # Added for the Trial Intelligence & Eligibility Matcher (Subsystem F).
+        # The raw criteria text is stored because extraction is a separate,
+        # cached, one-time step -- re-fetching the source text every time the
+        # extractor is re-run would make the extraction unreproducible against
+        # a registry that edits its own records.
+        "brief_title",
+        "conditions",
+        "eligibility_criteria",
+        "minimum_age",
+        "maximum_age",
+        "sex",
+        "study_type",
+        # Cross-referenced by the Access Pathway Registry (Subsystem J):
+        # a trial with an expanded-access programme IS an access route, and is
+        # materially different from one that merely exists.
+        "has_expanded_access",
+        "last_update_posted",
     ),
 )
 
@@ -215,6 +254,48 @@ STRUCTURAL_SIGNAL = NodeType(
     ),
 )
 
+#: How a drug can legitimately be obtained for a patient. Bounded, because the
+#: difference between "approved for this indication" and "compassionate use
+#: application required" is the entire content of the answer.
+PATHWAY_TYPES: frozenset[str] = frozenset(
+    {
+        "on_label",
+        "off_label",
+        "clinical_trial",
+        "expanded_access_individual",
+        "expanded_access_protocol",
+        "compassionate_use",
+        "named_patient_import",
+        "manufacturer_programme",
+    }
+)
+
+#: The distinction the Access Pathway Registry issue calls out explicitly:
+#: "expanded access has been granted for this agent before" is a materially
+#: different claim from "a pathway theoretically exists", and the two must
+#: never render identically. Bounded so a loader cannot invent a third state
+#: that the UI has no rule for.
+PRECEDENT_STRENGTHS: frozenset[str] = frozenset({"theoretical", "granted_before"})
+
+ACCESS_PATHWAY = NodeType(
+    "AccessPathway",
+    (
+        "pathway_id",
+        "pathway_type",
+        "country",
+        "regulator",
+        # The legal instrument the route rests on, cited verbatim -- e.g. a rule
+        # number or form number. Never paraphrased: a clinician following this
+        # needs the citable text, and an approximate citation is worse than none.
+        "instrument",
+        "description",
+        "source_url",
+        "precedent_strength",
+        "precedent_examples",
+        "config_version",
+    ),
+)
+
 ALL_NODE_TYPES: tuple[NodeType, ...] = (
     GENE,
     VARIANT,
@@ -224,6 +305,7 @@ ALL_NODE_TYPES: tuple[NodeType, ...] = (
     TRIAL,
     PUBLICATION,
     STRUCTURAL_SIGNAL,
+    ACCESS_PATHWAY,
 )
 
 # Every node carries these in addition to its own NodeType.properties.
