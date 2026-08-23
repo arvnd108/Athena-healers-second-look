@@ -41,7 +41,7 @@ def seed_file(tmp_path, name="india.yaml", **overrides):
     }
     payload.update(overrides)
     path = tmp_path / name
-    path.write_text(yaml.safe_dump(payload, allow_unicode=True))
+    path.write_text(yaml.safe_dump(payload, allow_unicode=True), encoding="utf-8")
     return path
 
 
@@ -97,14 +97,15 @@ class TestSeedFiles:
 
     def test_file_without_country_or_regulator_is_refused(self, tmp_path):
         path = seed_file(tmp_path)
-        path.write_text(yaml.safe_dump({"pathways": [entry()]}))
+        path.write_text(yaml.safe_dump({"pathways": [entry()]}), encoding="utf-8")
         with pytest.raises(AccessPathwayConfigError, match="country"):
             read_seed_file(path)
 
     def test_review_status_defaults_to_unreviewed_when_absent(self, tmp_path):
         path = tmp_path / "x.yaml"
         path.write_text(
-            yaml.safe_dump({"country": "IN", "regulator": "CDSCO", "pathways": [entry()]})
+            yaml.safe_dump({"country": "IN", "regulator": "CDSCO", "pathways": [entry()]}),
+            encoding="utf-8",
         )
         header, _ = read_seed_file(path)
         assert header["review_status"] == UNREVIEWED
@@ -117,7 +118,8 @@ class TestSeedFiles:
         bad.write_text(
             yaml.safe_dump(
                 {"country": "XX", "regulator": "R", "pathways": [entry(), entry(source_url="")]}
-            )
+            ),
+            encoding="utf-8",
         )
         summary = run_load(None, pathways_dir=tmp_path, dry_run=True)
         assert summary.files_read == 1

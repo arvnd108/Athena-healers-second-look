@@ -159,7 +159,7 @@ class TestLlmAssistedCaching:
         assert result.predicates[0].type == "ECOG_MAX"
 
     def test_unreadable_cache_is_ignored_not_fatal(self, tmp_path):
-        (tmp_path / f"{criteria_fingerprint('x')}.json").write_text("{not json")
+        (tmp_path / f"{criteria_fingerprint('x')}.json").write_text("{not json", encoding="utf-8")
         extractor = LlmAssistedExtractor(
             lambda t: [{"type": "UNPARSEABLE", "source_text": t}], cache_dir=tmp_path
         )

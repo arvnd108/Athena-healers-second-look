@@ -92,14 +92,20 @@ class TestParse:
 class TestScope:
     def test_derived_from_civic_scope_so_the_two_cannot_drift(self, tmp_path):
         civic = tmp_path / "civic.yaml"
-        civic.write_text(yaml.safe_dump({"diseases": [{"doid": "3369", "name": "Ewing Sarcoma"}]}))
+        civic.write_text(
+            yaml.safe_dump({"diseases": [{"doid": "3369", "name": "Ewing Sarcoma"}]}),
+            encoding="utf-8",
+        )
         terms = scope_conditions({"synonyms": {}}, civic_scope_path=civic)
         assert terms == ["Ewing Sarcoma"]
 
     def test_synonyms_are_keyed_by_doid_not_name(self, tmp_path):
         """Keyed by DOID so an entry cannot silently attach to the wrong disease."""
         civic = tmp_path / "civic.yaml"
-        civic.write_text(yaml.safe_dump({"diseases": [{"doid": "3369", "name": "Ewing Sarcoma"}]}))
+        civic.write_text(
+            yaml.safe_dump({"diseases": [{"doid": "3369", "name": "Ewing Sarcoma"}]}),
+            encoding="utf-8",
+        )
         terms = scope_conditions(
             {"synonyms": {"3369": ["Ewing's Sarcoma"]}}, civic_scope_path=civic
         )
@@ -110,7 +116,8 @@ class TestScope:
         civic.write_text(
             yaml.safe_dump(
                 {"diseases": [{"doid": "1", "name": "Sarcoma"}, {"doid": "2", "name": "sarcoma"}]}
-            )
+            ),
+            encoding="utf-8",
         )
         assert scope_conditions({"synonyms": {}}, civic_scope_path=civic) == ["Sarcoma"]
 
