@@ -34,6 +34,18 @@ class Assumption(Protocol):
         """
         ...
 
+    def triggering_event(self, case: CaseState) -> str:
+        """The event_id on `case` that best explains this assumption now
+        failing (empty string if none applies, e.g. the assumption hasn't
+        actually broken or there's genuinely no attributable event).
+
+        Each assumption type owns this because only it knows which part of
+        CaseState it inspects — diff.py should not need to know about every
+        concrete Assumption implementation to attribute a supersession to
+        an event.
+        """
+        ...
+
 
 @dataclass(frozen=True)
 class NoAlterationIn:
@@ -52,6 +64,10 @@ class NoAlterationIn:
         # a new evidence item for EGFR T790M re-evaluates a finding that
         # assumed no alteration in EGFR at all.
         return frozenset({(self.gene, "")})
+
+    def triggering_event(self, case: CaseState) -> str:
+        matching = [a.event_id for a in case.alterations if a.gene == self.gene]
+        return matching[-1] if matching else ""
 
 
 @dataclass(frozen=True)
@@ -72,6 +88,10 @@ class BiomarkerBelow:
         # assumption — only a new BIOMARKER_MEASURED event on the case does,
         # via `compute_diff()`.
         return frozenset()
+
+    def triggering_event(self, case: CaseState) -> str:
+        reading = case.biomarkers.get(self.name)
+        return reading.event_id if reading is not None else ""
 
 
 @dataclass(frozen=True)
@@ -94,6 +114,11 @@ class DrugNotYetTried:
         # under — re-evaluates a finding that assumed osimertinib was naive.
         return frozenset({("", self.drug)})
 
+    def triggering_event(self, case: CaseState) -> str:
+        target = self.drug.lower()
+        matching = [t.event_id for t in case.treatments if t.regimen.lower() == target]
+        return matching[-1] if matching else ""
+
 
 @dataclass(frozen=True)
 class DiseaseNotProgressing:
@@ -111,6 +136,10 @@ class DiseaseNotProgressing:
         # DISEASE_ASSESSMENT event on the case can break this, via
         # `compute_diff()`.
         return frozenset()
+
+    def triggering_event(self, case: CaseState) -> str:
+        assessment = case.latest_assessment
+        return assessment.event_id if assessment is not None else ""
 
 
 @dataclass(frozen=True)

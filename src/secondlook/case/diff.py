@@ -9,14 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
 
-from secondlook.case.assumptions import (
-    Assumption,
-    BiomarkerBelow,
-    DiseaseNotProgressing,
-    DrugNotYetTried,
-    Finding,
-    NoAlterationIn,
-)
+from secondlook.case.assumptions import Finding
 from secondlook.case.evidence_state import EvidenceSnapshot
 from secondlook.case.state import CaseState, DiseaseAssessment
 
@@ -159,7 +152,7 @@ def compute_diff(
                     Supersession(
                         finding_id=finding.id,
                         broken_assumption=assumption.describe(),
-                        triggering_event_id=_event_that_broke(assumption, current),
+                        triggering_event_id=assumption.triggering_event(current),
                         note=(
                             f"This finding assumed {assumption.describe()}. "
                             f"That is no longer true."
@@ -186,27 +179,3 @@ def _disease_summary(assessment: DiseaseAssessment) -> str:
     if assessment.status == "progression":
         return "disease progression recorded"
     return f"disease recorded as {assessment.status}"
-
-
-def _event_that_broke(assumption: Assumption, current: CaseState) -> str:
-    """Event id on `current` that accounts for this assumption now failing.
-
-    Picks the last matching record in the state's existing iteration order
-    (newest, if the fold appended chronologically). Unknown assumption types
-    — test doubles, future evidence-aware predicates — return "" because
-    this helper only knows the four built-in case-state types.
-    """
-    if isinstance(assumption, NoAlterationIn):
-        matching = [a.event_id for a in current.alterations if a.gene == assumption.gene]
-        return matching[-1] if matching else ""
-    if isinstance(assumption, BiomarkerBelow):
-        reading = current.biomarkers.get(assumption.name)
-        return reading.event_id if reading is not None else ""
-    if isinstance(assumption, DrugNotYetTried):
-        target = assumption.drug.lower()
-        matching = [t.event_id for t in current.treatments if t.regimen.lower() == target]
-        return matching[-1] if matching else ""
-    if isinstance(assumption, DiseaseNotProgressing):
-        assessment = current.latest_assessment
-        return assessment.event_id if assessment is not None else ""
-    return ""

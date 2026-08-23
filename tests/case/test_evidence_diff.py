@@ -35,6 +35,9 @@ class SpyAssumption:
     def evidence_keys(self) -> frozenset[tuple[str, str]]:
         return frozenset({(self.gene, self.variant_or_drug)})
 
+    def triggering_event(self, case: CaseState) -> str:
+        return ""
+
 
 @dataclass(frozen=True)
 class EvidenceAbsent:
@@ -54,6 +57,9 @@ class EvidenceAbsent:
 
     def evidence_keys(self) -> frozenset[tuple[str, str]]:
         return frozenset({(self.gene, self.variant_or_drug)})
+
+    def triggering_event(self, case: CaseState) -> str:
+        return ""
 
 
 def _event(

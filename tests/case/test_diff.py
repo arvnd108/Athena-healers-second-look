@@ -6,6 +6,8 @@ No `@pytest.mark.integration`. Minimum surface from IMPLEMENTATION_PLAN.md
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from secondlook.case.assumptions import (
     BiomarkerBelow,
     DiseaseNotProgressing,
@@ -513,3 +515,33 @@ def test_compute_diff_is_byte_identical_across_100_runs():
         )
         assert again == first
         assert repr(again) == repr(first)
+
+
+@dataclass(frozen=True)
+class _AlwaysBroken:
+    """Non-built-in Assumption: regression for the old isinstance dispatcher."""
+
+    event_id: str
+
+    def holds(self, case: CaseState, evidence: EvidenceSnapshot) -> bool:
+        return False
+
+    def describe(self) -> str:
+        return "custom always-broken"
+
+    def evidence_keys(self) -> frozenset[tuple[str, str]]:
+        return frozenset()
+
+    def triggering_event(self, case: CaseState) -> str:
+        return self.event_id
+
+
+def test_custom_assumption_supersedes_without_diff_knowing_its_type():
+    finding = _finding(assumptions=(_AlwaysBroken(event_id="evt-custom"),))
+    result = _diff(_state(), _state(), (finding,))
+    assert len(result.supersessions) == 1
+    sup = result.supersessions[0]
+    assert sup.finding_id == "f1"
+    assert sup.broken_assumption == "custom always-broken"
+    assert sup.triggering_event_id == "evt-custom"
+    assert sup.note == ("This finding assumed custom always-broken. That is no longer true.")
