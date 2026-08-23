@@ -124,6 +124,36 @@ def test_stage_gated_alone_is_unknown():
     assert result.reason == STAGE_UNKNOWN_REASON
 
 
+def test_stage_gated_rec_with_matching_stage_is_evaluated_normally():
+    """#57: once `stage` is given, a stage-gated rec is no longer
+    unresolvable -- it's checked against treatment history like any other
+    applicable rec."""
+    kb = _kb(_rec("synthetic-agent-delta", stages=("II", "III")))
+    result = assess_exhaustion(_case(), CANCER, kb, stage="III")
+    assert result.status == "not_exhausted"
+    assert result.untried_standard_option is not None
+    assert result.untried_standard_option.regimen == "synthetic-agent-delta"
+
+
+def test_stage_gated_rec_with_non_matching_stage_is_inapplicable_not_unknown():
+    """A case's stage that isn't in applicable_stages excludes the rec from
+    consideration entirely -- same as a molecular-requirement mismatch --
+    rather than making the result unknown."""
+    kb = _kb(_rec("synthetic-agent-delta", stages=("II", "III")))
+    result = assess_exhaustion(_case(), CANCER, kb, stage="IV")
+    assert result.status == "unknown"
+    assert result.reason == NO_APPLICABLE_REASON
+
+
+def test_stage_none_default_keeps_prior_unknown_behavior():
+    """Backward compatibility: an omitted `stage` behaves exactly as it did
+    before #57 -- unresolvable, not a guessed match or mismatch."""
+    kb = _kb(_rec("synthetic-agent-delta", stages=("II",)))
+    result = assess_exhaustion(_case(), CANCER, kb)
+    assert result.status == "unknown"
+    assert result.reason == STAGE_UNKNOWN_REASON
+
+
 def test_untried_stage_agnostic_still_surfaces_when_a_stage_gated_rec_exists():
     kb = _kb(
         _rec("synthetic-agent-alpha"),
