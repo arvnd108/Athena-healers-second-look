@@ -1,0 +1,41 @@
+# SYNTHETIC PLACEHOLDER — NOT REAL GUIDANCE.
+#
+# This file exists so the exhaustion-assessment machinery can be tested
+# offline. It is not a transcription of NCCN, ESMO, ASCO, or any other
+# real guideline. Do not cite it clinically. Do not copy its regimen
+# names, instruments, or URLs into a real seed file.
+#
+# review_status: synthetic_placeholder
+# The loader will refuse this file unless the caller passes
+# allow_synthetic=True. That is a hard safety gate, not a warning.
+config_version: "test.1"
+cancer_type: "TEST_SARCOMA_SYNTHETIC"
+review_status: synthetic_placeholder
+
+recommendations:
+  - regimen: "synthetic-agent-alpha"
+    line: 1
+    applicable_stages: []
+    instrument: "[SYNTHETIC EXAMPLE — NOT REAL GUIDANCE] Example Oncology Society Guidelines v0"
+    source_url: "https://example.invalid/synthetic-guideline"
+
+  - regimen: "synthetic-agent-beta"
+    line: 2
+    applicable_stages: []
+    instrument: "[SYNTHETIC EXAMPLE — NOT REAL GUIDANCE] Example Oncology Society Guidelines v0"
+    source_url: "https://example.invalid/synthetic-guideline"
+
+  - regimen: "synthetic-agent-gamma"
+    line: 1
+    molecular_requirement:
+      gene: "TESTGENE"
+      variant: "TESTVAR"
+    applicable_stages: []
+    instrument: "[SYNTHETIC EXAMPLE — NOT REAL GUIDANCE] Example Oncology Society Guidelines v0"
+    source_url: "https://example.invalid/synthetic-guideline"
+
+  - regimen: "synthetic-agent-delta"
+    line: 1
+    applicable_stages: ["II", "III"]
+    instrument: "[SYNTHETIC EXAMPLE — NOT REAL GUIDANCE] Example Oncology Society Guidelines v0"
+    source_url: "https://example.invalid/synthetic-guideline"
