@@ -1,0 +1,47 @@
+# Re-ingestion cadence per source.
+#
+# Cadence is a property of how fast the SOURCE changes, not of how fresh we
+# would like the graph to be. Polling faster than upstream publishes costs
+# requests and produces no events.
+#
+# Every interval below is a starting value with a stated reason. Change them by
+# editing this file, never in code.
+config_version: "2026-08-23.1"
+
+sources:
+  civic:
+    interval_hours: 168        # weekly
+    # CIViC is expert-curated: an evidence item's level changes on the timescale
+    # of a curator revisiting it, which is weeks to months. Daily polling would
+    # be almost entirely no-ops.
+    #
+    # CIViC has had unstable uptime historically (see the Subsystem A issue), so
+    # a missed window must be survivable rather than an error -- the scheduler
+    # simply runs it at the next opportunity.
+    reason: "expert-curated; evidence levels change on a weeks-to-months timescale"
+    enabled: true
+
+  pubmed:
+    interval_hours: 168        # weekly
+    # New citations accrue continuously, but a publication's own record is
+    # effectively immutable once indexed. What changes is which publications
+    # exist, and weekly is ample for that.
+    reason: "publication records are immutable once indexed; only the set grows"
+    enabled: true
+
+  clinicaltrials:
+    interval_hours: 24         # daily
+    # Recruitment status is the fastest-moving field in the whole graph and the
+    # one most likely to be acted on: a trial flipping RECRUITING ->
+    # ACTIVE_NOT_RECRUITING changes whether a patient can be referred to it.
+    # Stale here is materially worse than stale elsewhere.
+    reason: "recruitment status changes daily and is directly actionable"
+    enabled: true
+
+  ctri:
+    interval_hours: 24
+    # India's registry. Programmatic access is UNVERIFIED -- see the Subsystem A
+    # and F issues. Disabled until someone confirms how it can be queried;
+    # enabling it before then would build retry logic against a guess.
+    reason: "same cadence as ClinicalTrials.gov once access is confirmed"
+    enabled: false

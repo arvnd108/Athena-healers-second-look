@@ -1,17 +1,20 @@
 import pytest
 
 from secondlook.tier1.graph_schema import (
+    ACCESS_PATHWAY,
     DISEASE,
     DRUG,
     EVIDENCE_ITEM,
     EVIDENCE_LEVELS,
     GENE,
+    PRECEDENT_STRENGTHS,
     PUBLICATION,
     RESPONSE_DIRECTIONS,
     RESULT_EVIDENCE_LEVELS,
     RETRIEVAL_MODES,
     STRUCTURAL_SIGNAL,
     TRIAL,
+    TRIAL_STATUSES,
     VARIANT,
     VARIANT_TYPES,
     assert_valid,
@@ -206,7 +209,43 @@ class TestNodeTypeProperties:
             "locations",
             "country_codes",
             "eligibility_url",
+            # Added with the ClinicalTrials.gov loader (Subsystem F). The raw
+            # criteria text is stored so extraction can be re-run against a
+            # fixed corpus rather than a registry that edits its own records.
+            "brief_title",
+            "conditions",
+            "eligibility_criteria",
+            "minimum_age",
+            "maximum_age",
+            "sex",
+            "study_type",
+            "has_expanded_access",
+            "last_update_posted",
         )
+
+    def test_access_pathway(self):
+        assert ACCESS_PATHWAY.label == "AccessPathway"
+        assert ACCESS_PATHWAY.properties == (
+            "pathway_id",
+            "pathway_type",
+            "country",
+            "regulator",
+            "instrument",
+            "description",
+            "source_url",
+            "precedent_strength",
+            "precedent_examples",
+            "config_version",
+        )
+
+    def test_precedent_strength_has_exactly_two_states(self):
+        """ "A pathway theoretically exists" and "a grant has happened before"
+        are materially different claims and must never collapse together."""
+        assert PRECEDENT_STRENGTHS == frozenset({"theoretical", "granted_before"})
+
+    def test_trial_statuses_cover_the_registry_vocabulary(self):
+        for expected in ("RECRUITING", "ACTIVE_NOT_RECRUITING", "COMPLETED", "WITHDRAWN"):
+            assert expected in TRIAL_STATUSES
 
     def test_publication(self):
         assert PUBLICATION.label == "Publication"
