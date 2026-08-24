@@ -26,7 +26,9 @@ from datetime import datetime
 from secondlook.case.diff import ChangeSet
 from secondlook.case.questions import Question
 from secondlook.signals.mapping import batch_from, clock, gene_in_scope
+from secondlook.signals.trial_matching import MATCHER_VERSION
 from secondlook.signals.types import (
+    ComputedMethod,
     DocumentedSource,
     EvidenceClass,
     Signal,
@@ -129,20 +131,6 @@ def generate(
         phase_bit = f", {phase}" if phase else ""
         registry_bit = registry or "trial registry"
         claim = f"{title} ({ident}{phase_bit}) is {status} on {registry_bit}."
-        caveats: tuple[str, ...] = ()
-
-        # Issue #46: when a case is available, say whether THIS patient plausibly
-        # qualifies, not merely that a matching trial is recruiting.
-        #
-        # Folded into the existing trial signal rather than emitted as a second
-        # SignalKind: eligibility qualifies this trial, it is not a separate
-        # finding about it, and two signals per trial would leave a reader to
-        # reconcile them. Absent a case, the claim is unchanged.
-        if case is not None and criteria_text:
-            bucket, bucket_caveats = _bucket_for(str(ident), str(criteria_text), case)
-            claim = f"{claim} For this case: {bucket.replace('_', ' ')}."
-            caveats = bucket_caveats
-
         signals.append(
             Signal(
                 kind=SignalKind.TRIAL,
@@ -153,11 +141,52 @@ def generate(
                     citation_id=str(registry_id) if registry_id else None,
                 ),
                 confidence="stated",
-                caveats=caveats,
+                caveats=(),
                 computed_at=when,
                 generator_version=GENERATOR_VERSION,
             )
         )
+
+        # Issue #46: when a case is available, also say whether THIS patient
+        # plausibly qualifies -- not merely that a matching trial is recruiting.
+        #
+        # Emitted as a second, `computed` signal rather than folded into the
+        # claim above. The registry published "this study is recruiting"; it did
+        # not publish "this patient probably does not qualify". Appending the
+        # verdict to a DOCUMENTED claim would put a computed conclusion behind
+        # that trial's citation, which is exactly the ambiguity
+        # IMPLEMENTATION_PLAN.md 9.2 tells the UI not to reintroduce -- and it
+        # would pass `Signal.__post_init__`, which guards `source` but cannot
+        # read free text in `claim`.
+        #
+        # Two signals per trial is the intended shape, not a compromise:
+        # types.py's docstring already assigns reconciliation to subsystem I/M
+        # ("rendering them side by side is subsystem I/M"), and 9.2's four
+        # visual treatments exist so a reader can tell the two apart at a glance.
+        if case is not None and criteria_text:
+            bucket, bucket_caveats = _bucket_for(str(ident), str(criteria_text), case)
+            signals.append(
+                Signal(
+                    kind=SignalKind.TRIAL_ELIGIBILITY,
+                    evidence_class=EvidenceClass.COMPUTED,
+                    claim=(
+                        f"For this case, {ident} reads as "
+                        f"{bucket.replace('_', ' ')} against its published criteria."
+                    ),
+                    source=ComputedMethod(
+                        method="signals.trial_matching.match_trial",
+                        version=MATCHER_VERSION,
+                    ),
+                    # Never above `low`: the extractor feeding this matcher is
+                    # scored against a corpus that has not reached the ~30
+                    # sections docs/trial-extraction-validation-plan.md targets,
+                    # so its accuracy numbers are still provisional.
+                    confidence="low",
+                    caveats=bucket_caveats,
+                    computed_at=when,
+                    generator_version=GENERATOR_VERSION,
+                )
+            )
 
     return batch_from(
         signals,

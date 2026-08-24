@@ -37,6 +37,16 @@ CONFIDENCE_LEVELS: frozenset[str] = frozenset({"stated", "low", "moderate", "hig
 class SignalKind(StrEnum):
     DOCUMENTED_EVIDENCE = "documented_evidence"
     TRIAL = "trial"
+    # Separate from TRIAL because it is a different class of thing. TRIAL says a
+    # registry published that this study exists and is recruiting; the registry
+    # is the source and can be cited. TRIAL_ELIGIBILITY says our matcher read
+    # that study's criteria against one case and reached a verdict -- nobody
+    # published that, so it is `computed` and carries a method instead of a
+    # citation. Folding the verdict into TRIAL's claim text would slip a
+    # computed conclusion past the enforcement below, which only guards
+    # `source`, and IMPLEMENTATION_PLAN.md 9.2 would then render it behind a
+    # solid border with a clickable citation.
+    TRIAL_ELIGIBILITY = "trial_eligibility"
     ACCESS_PATHWAY = "access_pathway"
     COMPUTATIONAL = "computational"
     COMBINATION = "combination"
