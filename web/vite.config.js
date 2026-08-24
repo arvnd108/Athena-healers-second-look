@@ -17,6 +17,17 @@ import react from '@vitejs/plugin-react'
 //    that cannot parse the bundle.
 export default defineConfig({
   plugins: [react()],
+  // Vitest reads this file too. jsdom rather than a real browser: these tests
+  // assert component contracts -- which props exist, what never renders --
+  // not layout, so a browser would cost minutes per run and prove nothing
+  // extra. The visual rules in §9.1/§9.2 are asserted against the stylesheet
+  // itself in tests/web/test_render.py.
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./src/test/setup.js'],
+    include: ['src/**/*.test.{js,jsx}'],
+  },
   build: {
     target: 'es2018',
     cssCodeSplit: false,

@@ -56,3 +56,43 @@ jobs:
 
       - name: Format check (black)
         run: black --check .
+
+  client:
+    name: Subsystem M client (Node 20)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install
+        run: npm ci
+        working-directory: web
+
+      - name: Component tests (vitest)
+        run: npm test
+        working-directory: web
+        # These assert contracts, not layout: which props exist, and what
+        # must never render. The load-bearing one reads ComputedCard.jsx's
+        # source and fails if it so much as mentions a citation —
+        # IMPLEMENTATION_PLAN.md §9.2 says the computed card must have no
+        # place for one, "not an empty one". The server-rendered half asserts
+        # the same rule by inspect.signature in tests/web/test_render.py;
+        # JavaScript has no signature to inspect, so the source is the
+        # closest true analogue.
+
+      - name: Build
+        run: npm run build
+        working-directory: web
+
+      - name: Bundle budget
+        run: npm run budget
+        working-directory: web
+        # Fails the build when the gzipped JS/CSS budget in
+        # docs/performance-budget.md is exceeded, so the budget cannot age
+        # into a paragraph nobody re-measures.

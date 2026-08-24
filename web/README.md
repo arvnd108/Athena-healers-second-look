@@ -75,6 +75,20 @@ into it. It always carries caveats naming *which* criteria could not be
 checked, and those names are the actionable part for a clinician — so caveats
 render in full, on both halves, with no truncation and no tooltip.
 
+## Tests
+
+```bash
+cd web && npm test        # 22 component tests (vitest + jsdom)
+pytest tests/web          # 37 tests for the server-rendered half
+```
+
+Both halves assert the same §9.2 rule by the strongest means each language
+offers. Python inspects the signature — `render._computed_card()` cannot be
+passed a citation. JavaScript has no signature to inspect, so the test reads
+`ComputedCard.jsx`'s source and fails if it so much as mentions a citation or
+an href. Verified by injecting the regression: adding a `citationUrl` prop
+back fails both the source test and the render test.
+
 ## Budgets
 
 Measured, enforced, and failing loudly rather than aging into prose:
@@ -84,7 +98,8 @@ cd web && npm run build && npm run budget   # JS/CSS budget vs a real dist/
 pytest tests/web                            # SSR page-weight budget
 ```
 
-See `docs/performance-budget.md` for the targets and the measurement method.
+Both run in CI (`.github/workflows/ci.yml`, job "Subsystem M client"). See
+`docs/performance-budget.md` for the targets and the measurement method.
 
 ## What is deliberately not here
 
