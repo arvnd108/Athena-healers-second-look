@@ -134,6 +134,24 @@ def test_create_finding_round_trips_dict_payloads_through_the_same_shape():
     assert finding.assumptions == [payload]
 
 
+def test_get_finding_returns_none_when_session_has_no_row():
+    session = MagicMock()
+    session.get.return_value = None
+    finding_id = uuid.uuid4()
+    assert CaseStore(session).get_finding(finding_id) is None
+    session.get.assert_called_once()
+    args, _kwargs = session.get.call_args
+    assert args[0] is Finding
+    assert args[1] == finding_id
+
+
+def test_get_finding_returns_the_session_row():
+    session = MagicMock()
+    row = SimpleNamespace(id=uuid.uuid4(), claim="documented evidence")
+    session.get.return_value = row
+    assert CaseStore(session).get_finding(row.id) is row
+
+
 def test_orm_question_and_finding_are_the_row_types_listed():
     # Guard against accidentally returning domain Finding from list_questions.
     assert Question.__tablename__ == "questions"
