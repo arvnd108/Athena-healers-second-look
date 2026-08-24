@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from secondlook.case.assumptions import (
     BiomarkerBelow,
     DiseaseNotProgressing,
@@ -137,3 +139,36 @@ def test_disease_not_progressing_triggering_event_is_the_assessment_event():
 
 def test_disease_not_progressing_triggering_event_is_empty_when_no_assessment():
     assert DiseaseNotProgressing().triggering_event(CaseState(case_id="case-1")) == ""
+
+
+def test_every_assumption_type_round_trips_through_to_dict_from_dict():
+    from secondlook.case.assumptions import (
+        ASSUMPTION_TYPES,
+        assumption_from_dict,
+        assumption_to_dict,
+    )
+
+    originals = [
+        NoAlterationIn(gene="EGFR"),
+        BiomarkerBelow(name="TMB", threshold=10.0),
+        DrugNotYetTried(drug="osimertinib"),
+        DiseaseNotProgressing(),
+    ]
+    assert set(ASSUMPTION_TYPES) == {type(o).__name__ for o in originals}
+    for original in originals:
+        restored = assumption_from_dict(assumption_to_dict(original))
+        assert restored == original
+
+
+def test_unrecognized_assumption_type_raises_named_error():
+    from secondlook.case.assumptions import UnknownAssumptionTypeError, assumption_from_dict
+
+    with pytest.raises(UnknownAssumptionTypeError, match="NotARealAssumption"):
+        assumption_from_dict({"type": "NotARealAssumption", "gene": "EGFR"})
+
+
+def test_malformed_assumption_payload_raises_named_error():
+    from secondlook.case.assumptions import AssumptionDeserializeError, assumption_from_dict
+
+    with pytest.raises(AssumptionDeserializeError):
+        assumption_from_dict({"type": "NoAlterationIn"})  # missing gene

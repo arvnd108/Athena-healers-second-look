@@ -148,6 +148,61 @@ class DiseaseNotProgressing:
         return case.assessments[-1].event_id if case.assessments else ""
 
 
+class AssumptionDeserializeError(ValueError):
+    """Payload is not a reconstructable Assumption -- never silently drop it."""
+
+
+class UnknownAssumptionTypeError(AssumptionDeserializeError):
+    """The type tag is not one of the four registered Assumption classes."""
+
+
+ASSUMPTION_TYPES: dict[str, type] = {
+    "NoAlterationIn": NoAlterationIn,
+    "BiomarkerBelow": BiomarkerBelow,
+    "DrugNotYetTried": DrugNotYetTried,
+    "DiseaseNotProgressing": DiseaseNotProgressing,
+}
+
+
+def assumption_to_dict(assumption: Assumption) -> dict:
+    """Serialize one Assumption. Inverse of `assumption_from_dict`."""
+    tag = type(assumption).__name__
+    if tag not in ASSUMPTION_TYPES:
+        raise UnknownAssumptionTypeError(f"cannot serialize unregistered assumption type {tag!r}")
+    payload: dict = {"type": tag}
+    if isinstance(assumption, NoAlterationIn):
+        payload["gene"] = assumption.gene
+    elif isinstance(assumption, BiomarkerBelow):
+        payload["name"] = assumption.name
+        payload["threshold"] = assumption.threshold
+    elif isinstance(assumption, DrugNotYetTried):
+        payload["drug"] = assumption.drug
+    return payload
+
+
+def assumption_from_dict(payload: dict) -> Assumption:
+    """Reconstruct an Assumption. Raises rather than dropping or coercing.
+
+    A finding whose assumption cannot be rebuilt has unknown supersession
+    behaviour; treating that as "no assumptions" would hide a supersession.
+    """
+    if not isinstance(payload, dict) or "type" not in payload:
+        raise AssumptionDeserializeError(
+            f"assumption payload must be a dict with a 'type' key, got {payload!r}"
+        )
+    tag = payload["type"]
+    cls = ASSUMPTION_TYPES.get(tag)
+    if cls is None:
+        raise UnknownAssumptionTypeError(
+            f"unrecognized assumption type {tag!r}; " f"known types: {sorted(ASSUMPTION_TYPES)}"
+        )
+    fields = {k: v for k, v in payload.items() if k != "type"}
+    try:
+        return cls(**fields)
+    except TypeError as exc:
+        raise AssumptionDeserializeError(f"malformed payload for {tag}: {payload!r}") from exc
+
+
 @dataclass(frozen=True)
 class Finding:
     """A cited finding answering a question, with typed assumptions.
