@@ -52,6 +52,7 @@ def generate(
     *,
     graph=None,
     dgidb_client: DgidbClient | None = None,
+    case=None,  # shared injectable surface with dispatch(); unused here
     now: datetime | None = None,
 ) -> SignalBatch:
     when = clock(now)

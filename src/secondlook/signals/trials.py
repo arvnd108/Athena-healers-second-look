@@ -26,7 +26,9 @@ from datetime import datetime
 from secondlook.case.diff import ChangeSet
 from secondlook.case.questions import Question
 from secondlook.signals.mapping import batch_from, clock, gene_in_scope
+from secondlook.signals.trial_matching import MATCHER_VERSION
 from secondlook.signals.types import (
+    ComputedMethod,
     DocumentedSource,
     EvidenceClass,
     Signal,
@@ -52,7 +54,7 @@ assert ACTIONABLE_TRIAL_STATUSES <= TRIAL_STATUSES
 
 _RETURN = (
     "RETURN t.registry_id, t.registry, t.status, t.phase, "
-    "t.brief_title, t.eligibility_url "
+    "t.brief_title, t.eligibility_url, t.eligibility_criteria "
     "ORDER BY t.registry_id"
 )
 
@@ -76,6 +78,7 @@ def generate(
     *,
     graph=None,
     dgidb_client=None,
+    case=None,
     now: datetime | None = None,
 ) -> SignalBatch:
     del dgidb_client
@@ -105,7 +108,11 @@ def generate(
     seen: set[str] = set()
 
     for row in result.result_set:
-        registry_id, registry, status, phase, brief_title, eligibility_url = row
+        # Unpacked defensively rather than by fixed arity: the criteria column
+        # was added for issue #46, and a row set recorded before it (including
+        # every already-merged test fixture) is still valid input.
+        registry_id, registry, status, phase, brief_title, eligibility_url = row[:6]
+        criteria_text = row[6] if len(row) > 6 else None
         assert_valid(str(status) if status is not None else "", TRIAL_STATUSES, "status")
         if status not in ACTIONABLE_TRIAL_STATUSES:
             filtered_count += 1
@@ -140,6 +147,47 @@ def generate(
             )
         )
 
+        # Issue #46: when a case is available, also say whether THIS patient
+        # plausibly qualifies -- not merely that a matching trial is recruiting.
+        #
+        # Emitted as a second, `computed` signal rather than folded into the
+        # claim above. The registry published "this study is recruiting"; it did
+        # not publish "this patient probably does not qualify". Appending the
+        # verdict to a DOCUMENTED claim would put a computed conclusion behind
+        # that trial's citation, which is exactly the ambiguity
+        # IMPLEMENTATION_PLAN.md 9.2 tells the UI not to reintroduce -- and it
+        # would pass `Signal.__post_init__`, which guards `source` but cannot
+        # read free text in `claim`.
+        #
+        # Two signals per trial is the intended shape, not a compromise:
+        # types.py's docstring already assigns reconciliation to subsystem I/M
+        # ("rendering them side by side is subsystem I/M"), and 9.2's four
+        # visual treatments exist so a reader can tell the two apart at a glance.
+        if case is not None and criteria_text:
+            bucket, bucket_caveats = _bucket_for(str(ident), str(criteria_text), case)
+            signals.append(
+                Signal(
+                    kind=SignalKind.TRIAL_ELIGIBILITY,
+                    evidence_class=EvidenceClass.COMPUTED,
+                    claim=(
+                        f"For this case, {ident} reads as "
+                        f"{bucket.replace('_', ' ')} against its published criteria."
+                    ),
+                    source=ComputedMethod(
+                        method="signals.trial_matching.match_trial",
+                        version=MATCHER_VERSION,
+                    ),
+                    # Never above `low`: the extractor feeding this matcher is
+                    # scored against a corpus that has not reached the ~30
+                    # sections docs/trial-extraction-validation-plan.md targets,
+                    # so its accuracy numbers are still provisional.
+                    confidence="low",
+                    caveats=bucket_caveats,
+                    computed_at=when,
+                    generator_version=GENERATOR_VERSION,
+                )
+            )
+
     return batch_from(
         signals,
         filtered_count=filtered_count,
@@ -148,3 +196,49 @@ def generate(
             f"({filtered_count} filtered)"
         ),
     )
+
+
+#: Cap on criteria carried into a caveat list. A long exclusion section can run
+#: to dozens of lines, and a signal whose caveats are unreadable is a signal
+#: nobody reads.
+MAX_CAVEATS = 4
+
+
+def _bucket_for(trial_id: str, criteria_text: str, case) -> tuple[str, tuple[str, ...]]:
+    """Bucket one trial for one case, as (bucket, caveats).
+
+    Extraction is deliberately the rule-based path: this runs per patient per
+    query, and the LLM-assisted extractor is a one-time cached cost that belongs
+    in the loader, not here.
+    """
+    from secondlook.signals.trial_matching import match_trial
+    from secondlook.tier1.criteria_extraction import RuleBasedExtractor
+
+    predicates = RuleBasedExtractor().extract(trial_id, criteria_text).predicates
+    result = match_trial(trial_id, predicates, case)
+
+    caveats: list[str] = []
+    if result.violated_criteria:
+        caveats.append(
+            f"{len(result.violated_criteria)} criterion/criteria appear unmet: "
+            + "; ".join(c[:120] for c in result.violated_criteria[:MAX_CAVEATS])
+        )
+    if result.unresolved_criteria:
+        # Named explicitly, because "needs verification" without saying WHAT
+        # needs verifying gives a clinician nothing to act on.
+        caveats.append(
+            f"{len(result.unresolved_criteria)} criterion/criteria could not be "
+            "checked against this case: "
+            + "; ".join(c[:120] for c in result.unresolved_criteria[:MAX_CAVEATS])
+        )
+    unevaluable = result.unresolvable_predicate_types()
+    if unevaluable:
+        caveats.append(
+            "Criterion types this system cannot evaluate at all: "
+            + ", ".join(f"{k} x{v}" for k, v in sorted(unevaluable.items()))
+        )
+    caveats.append(
+        "Eligibility bucketing is a triage aid over registry text. It does not "
+        "read the protocol and cannot see anything the sponsor did not write down."
+    )
+    return result.bucket, tuple(caveats)
