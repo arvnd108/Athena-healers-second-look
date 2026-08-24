@@ -6,9 +6,16 @@ results inside the uniform `{items, empty_reason}` envelope. REST routes
 unwrap that envelope at the HTTP boundary: a GET of a single resource
 returns the resource (or 404), never the envelope itself.
 
-MCP authentication is **not** in this PR (issue #60). REST write-route
-auth is a required `X-Athena-Api-Key` header, fail-closed unless
-`ATHENA_API_AUTH_DISABLED=true`.
+MCP authentication (issue #60) is a static bearer token in
+`ATHENA_MCP_API_KEY`, required only when `--allow-remote` is passed.
+Loopback-bound SSE/streamable-http and stdio stay unauthenticated — the
+same trust boundary as a local process. Clients send
+`Authorization: Bearer <token>` (the MCP SDK's `BearerAuthBackend` reads
+that header; there is no custom `X-` header). `AuthSettings.issuer_url`
+and `resource_server_url` are SDK plumbing so `RequireAuthMiddleware`
+turns on; they are not a real OAuth authorization server. REST write-route
+auth is a **separate** secret (`ATHENA_API_KEY` / `X-Athena-Api-Key`),
+fail-closed unless `ATHENA_API_AUTH_DISABLED=true`.
 
 ## Envelope
 

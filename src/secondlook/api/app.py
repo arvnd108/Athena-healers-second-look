@@ -19,7 +19,7 @@ def create_app() -> FastAPI:
         version="1.0.0",
         description=(
             "System of record for case writes. Auth is an API key on POST routes; "
-            "MCP auth is issue #60."
+            "MCP remote bind uses a separate ATHENA_MCP_API_KEY bearer token."
         ),
     )
     app.include_router(cases.router)

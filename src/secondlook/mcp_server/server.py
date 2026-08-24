@@ -1,4 +1,4 @@
-"""MCP server entry: loopback bind by default, no auth (see issue #60)."""
+"""MCP server entry: loopback bind by default; remote bind requires auth."""
 
 from __future__ import annotations
 
@@ -26,9 +26,10 @@ DEFAULT_DATABASE_URL = "postgresql+psycopg://athena:athena@localhost:5432/athena
 def resolve_bind_host(*, allow_remote: bool = False) -> str:
     if allow_remote:
         warnings.warn(
-            "MCP server is binding beyond loopback with no authentication. "
-            "Do not expose this on a reachable network until issue #60 "
-            "(https://github.com/healers-second-look/Athena/issues/60) lands.",
+            "MCP server is binding beyond loopback with authentication "
+            "required and enabled (issue #60). Set ATHENA_MCP_API_KEY; "
+            "the server refuses to start without it. "
+            "https://github.com/healers-second-look/Athena/issues/60",
             stacklevel=2,
         )
         return REMOTE_BIND_HOST
@@ -68,7 +69,18 @@ def build_server(view: ReadOnlyCaseView, *, graph=None, allow_remote: bool = Fal
     from mcp.server.fastmcp import FastMCP
 
     host = resolve_bind_host(allow_remote=allow_remote)
-    mcp = FastMCP("athena-secondlook", host=host)
+    if allow_remote:
+        from secondlook.mcp_server.auth import configure_remote_auth
+
+        auth, token_verifier = configure_remote_auth()
+        mcp = FastMCP(
+            "athena-secondlook",
+            host=host,
+            auth=auth,
+            token_verifier=token_verifier,
+        )
+    else:
+        mcp = FastMCP("athena-secondlook", host=host)
     register_tools(mcp, view, graph=graph)
     return mcp
 
@@ -96,7 +108,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--allow-remote",
         action="store_true",
-        help="Bind 0.0.0.0. Unauthenticated; see issue #60. Off by default.",
+        help="Bind 0.0.0.0. Requires ATHENA_MCP_API_KEY (issue #60). Off by default.",
     )
     parser.add_argument(
         "--transport",
@@ -107,11 +119,18 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     host = resolve_bind_host(allow_remote=args.allow_remote)
-    logger.info(
-        "MCP bind host %s transport=%s (authentication is issue #60; not implemented)",
-        host,
-        args.transport,
-    )
+    if args.allow_remote:
+        logger.info(
+            "MCP bind host %s transport=%s (authentication required and active)",
+            host,
+            args.transport,
+        )
+    else:
+        logger.info(
+            "MCP bind host %s transport=%s (authentication off on loopback)",
+            host,
+            args.transport,
+        )
     view = open_read_only_view()
     graph = _optional_graph()
     mcp = build_server(view, graph=graph, allow_remote=args.allow_remote)
