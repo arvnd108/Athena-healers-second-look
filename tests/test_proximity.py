@@ -180,13 +180,15 @@ def test_two_different_drugs_on_one_structure_share_the_pocket_measurement():
 # chain B -- which straddles the 8 A band boundary, so which copy was measured
 # decided whether the mutation read as `pocket_adjacent` or `distant`.
 
-from secondlook.proximity import build_proximity_signal  # noqa: E402
-
 
 def _signal(protomers, **kw):
     return build_proximity_signal(
-        None, structure_id="8C7X", structure_source="PDB",
-        measured_to_ligand="TXV", protomer_distances=protomers, **kw,
+        None,
+        structure_id="8C7X",
+        structure_source="PDB",
+        measured_to_ligand="TXV",
+        protomer_distances=protomers,
+        **kw,
     )
 
 
@@ -202,7 +204,9 @@ def test_closest_protomer_is_reported():
 def test_per_chain_values_win_over_a_single_passed_in_distance():
     """One number cannot represent a multimer."""
     signal = build_proximity_signal(
-        99.0, structure_id="8C7X", structure_source="PDB",
+        99.0,
+        structure_id="8C7X",
+        structure_source="PDB",
         protomer_distances={"A": 12.2, "B": 7.2},
     )
     assert signal.distance_angstrom == pytest.approx(7.2)
@@ -220,8 +224,8 @@ def test_disagreement_is_stated_in_the_description():
 def test_disagreement_is_band_based_not_a_numeric_threshold():
     """A 1 A spread inside one band changes no conclusion; a 0.2 A spread across
     a boundary changes whether a docking delta is even attempted."""
-    wide_same_band = _signal({"A": 2.0, "B": 3.5})       # both in_contact
-    narrow_across = _signal({"A": 7.9, "B": 8.1})        # straddles 8.0
+    wide_same_band = _signal({"A": 2.0, "B": 3.5})  # both in_contact
+    narrow_across = _signal({"A": 7.9, "B": 8.1})  # straddles 8.0
     assert not wide_same_band.protomers_disagree
     assert narrow_across.protomers_disagree
     assert "do not agree" not in wide_same_band.description

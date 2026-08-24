@@ -2,7 +2,7 @@
 
 import pytest
 
-from secondlook.binding import BINDING_UNAVAILABLE_MESSAGE, BindingScore
+from secondlook.binding import BindingScore
 from secondlook.candidates import ZERO_CANDIDATES_MESSAGE
 from secondlook.graph import PIPELINE_VERSION
 from secondlook.mutation_validation import OUT_OF_SCOPE_MESSAGE, ProteinSequence

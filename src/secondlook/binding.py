@@ -447,9 +447,7 @@ def _vina_or_unavailable(
         # was inapplicable" turns a resource limit into a false claim about the
         # molecule.
         return _unavailable(
-            DOCKING_TIMEOUT_MESSAGE.format(
-                timeout=getattr(vina_client, "timeout_seconds", 0.0)
-            ),
+            DOCKING_TIMEOUT_MESSAGE.format(timeout=getattr(vina_client, "timeout_seconds", 0.0)),
             reason_code="docking_timeout",
         )
     except ReceptorPrepError as exc:
@@ -473,9 +471,7 @@ def _vina_or_unavailable(
     except vina_error as exc:
         # VinaRunError and anything else deriving from VinaError. Records the
         # detail rather than discarding it.
-        return _unavailable(
-            DOCKING_FAILED_MESSAGE.format(detail=exc), reason_code="docking_failed"
-        )
+        return _unavailable(DOCKING_FAILED_MESSAGE.format(detail=exc), reason_code="docking_failed")
 
 
 def _unavailable(message: str, reason_code: BindingReasonCode = "unavailable") -> BindingScore:

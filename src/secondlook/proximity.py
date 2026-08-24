@@ -210,8 +210,7 @@ def build_proximity_signal(
         # they may never look at. A band that depends on which copy you measured
         # is not a settled fact and must not read as one.
         detail = ", ".join(
-            f"chain {chain} {value:.1f} A"
-            for chain, value in sorted(protomer_distances.items())
+            f"chain {chain} {value:.1f} A" for chain, value in sorted(protomer_distances.items())
         )
         description += (
             f" This structure holds {len(protomer_distances)} copies of the "

@@ -284,6 +284,7 @@ def select_docking_chain(pdb_text: str, position: int) -> str:
             f"(residue in {sorted(residue_chains)}, ligand in {sorted(ligand_chains) or 'none'}); "
             "cannot place a grid box on a pocket this mutation could affect"
         )
+
     # Among the chains that qualify, dock in the protomer where the mutated
     # residue is CLOSEST to that chain's ligand.
     #
