@@ -155,3 +155,123 @@ class TestTrialsSyntheticRow:
         change = _change()
         with pytest.raises(ValueError, match="status"):
             _generate(change_set=_set(change), question=_question(change), graph=graph)
+
+
+# --- issue #46: eligibility bucketing folded into the trial signal -----------
+
+CRITERIA = (
+    "Inclusion Criteria:\n"
+    "* Age 18 years or older\n"
+    "* ECOG performance status 0-2\n"
+    "Exclusion Criteria:\n"
+    "* Prior treatment with a PARP inhibitor\n"
+)
+ROW_WITH_CRITERIA = (*RECRUITING_ROW, CRITERIA)
+
+
+def _case(**biomarkers):
+    from secondlook.case.state import BiomarkerValue, CaseState
+
+    return CaseState(
+        case_id="c1",
+        biomarkers={
+            name: BiomarkerValue(name, value, None, None, "e1")
+            for name, value in biomarkers.items()
+        },
+    )
+
+
+class TestEligibilityBucketing:
+    def test_without_a_case_the_claim_is_unchanged(self):
+        """Already-merged callers pass no case and must see existence-only
+        signals exactly as before."""
+        graph = FakeGraph(responses=[[ROW_WITH_CRITERIA]])
+        change = _change()
+        batch = _generate(change_set=_set(change), question=_question(change), graph=graph)
+        assert "For this case" not in batch.signals[0].claim
+        assert batch.signals[0].caveats == ()
+
+    def test_a_case_that_fails_a_criterion_is_probably_incompatible(self):
+        graph = FakeGraph(responses=[[ROW_WITH_CRITERIA]])
+        change = _change()
+        batch = _generate(
+            change_set=_set(change),
+            question=_question(change),
+            graph=graph,
+            case=_case(age=12, ECOG=1),
+        )
+        assert "probably incompatible" in batch.signals[0].claim
+        assert any("appear unmet" in c for c in batch.signals[0].caveats)
+
+    def test_a_case_missing_data_is_needs_verification_and_says_what_is_missing(self):
+        """'Needs verification' without saying WHAT to verify gives a clinician
+        nothing to act on."""
+        graph = FakeGraph(responses=[[ROW_WITH_CRITERIA]])
+        change = _change()
+        batch = _generate(
+            change_set=_set(change),
+            question=_question(change),
+            graph=graph,
+            case=_case(),
+        )
+        signal = batch.signals[0]
+        assert "needs verification" in signal.claim
+        assert any("could not be checked" in c for c in signal.caveats)
+        assert any("Age 18 years or older" in c for c in signal.caveats)
+
+    def test_every_bucketed_signal_carries_the_triage_caveat(self):
+        graph = FakeGraph(responses=[[ROW_WITH_CRITERIA]])
+        change = _change()
+        batch = _generate(
+            change_set=_set(change),
+            question=_question(change),
+            graph=graph,
+            case=_case(age=52, ECOG=1),
+        )
+        assert any("triage aid" in c for c in batch.signals[0].caveats)
+
+    def test_a_trial_with_no_criteria_text_is_not_bucketed(self):
+        """Bucketing an unread trial would be the worst error available here."""
+        graph = FakeGraph(responses=[[(*RECRUITING_ROW, None)]])
+        change = _change()
+        batch = _generate(
+            change_set=_set(change),
+            question=_question(change),
+            graph=graph,
+            case=_case(age=52),
+        )
+        assert "For this case" not in batch.signals[0].claim
+
+    def test_six_column_rows_still_work(self):
+        """The criteria column was added for #46; row sets recorded before it
+        remain valid input."""
+        graph = FakeGraph(responses=[[RECRUITING_ROW]])
+        change = _change()
+        batch = _generate(
+            change_set=_set(change),
+            question=_question(change),
+            graph=graph,
+            case=_case(age=52),
+        )
+        assert len(batch.signals) == 1
+
+
+class TestDispatchForwardsCase:
+    def test_dispatch_passes_case_to_every_generator(self):
+        from secondlook.signals.registry import dispatch
+        from secondlook.signals.types import SignalBatch
+
+        seen = {}
+
+        def spy(change_set, question, *, graph=None, dgidb_client=None, case=None, now=None):
+            seen["case"] = case
+            return SignalBatch(signals=(), filtered_count=0, empty_reason="spy")
+
+        change = _change()
+        dispatch(
+            _set(change),
+            _question(change),
+            registry={change.kind: (spy,)},
+            case="sentinel",
+        )
+        assert seen["case"] == "sentinel"

@@ -73,6 +73,7 @@ def dispatch(
     registry: dict[ChangeKind, tuple[Generator, ...]] | None = None,
     graph=None,
     dgidb_client=None,
+    case=None,
     now: datetime | None = None,
 ) -> list[Signal]:
     """Look up `question.kind` in the table and call every mapped generator.
@@ -91,6 +92,7 @@ def dispatch(
             question,
             graph=graph,
             dgidb_client=dgidb_client,
+            case=case,
             now=now,
         )
         signals.extend(batch.signals)
