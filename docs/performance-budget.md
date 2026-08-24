@@ -62,8 +62,9 @@ doesn't; it cannot arrive broken.
 ### Where it is enforced
 
 `tests/web/test_render.py::TestPerformanceBudget` gzips each rendered page and
-asserts it stays under the budget. It runs in the ordinary offline suite, so a
-change that doubles the page fails CI rather than being discovered on a phone.
+asserts it stays under the budget. It runs in the ordinary offline suite —
+the **Offline test suite (Python 3.11)** CI job — so a change that doubles the
+page fails the pull request rather than being discovered on a phone.
 
 There is also a guard on the guard: a test asserts the budget is measured
 against a **non-empty** page, so the check cannot start passing because the
@@ -100,7 +101,10 @@ These two are interactive and stay a client app, per `IMPLEMENTATION_PLAN.md`
 | CSS ≤ 20 KB gzipped | 1,478 B | **7%** |
 
 Enforced by `web/scripts/check-budget.mjs` (`npm run budget`) against a real
-`dist/`, so it measures what ships rather than what was intended.
+`dist/`, so it measures what ships rather than what was intended — and it
+runs in CI, in the **Subsystem M client (Node 20)** job, not only when
+someone remembers to run it locally. A change that inflates the bundle fails
+the pull request.
 
 **What this costs on the target link.** 62 KB of gzipped JS is roughly 1.3 s of
 transfer at 400 kbps, before parse and execute on a slow CPU. That is the honest
