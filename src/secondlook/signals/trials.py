@@ -1,13 +1,12 @@
 """Trials signal generator -- Cypher against the Trial label.
 
-The Trial Intelligence & Eligibility Matcher (issue #7) and
-`ctgov_loader.py` (issue #8) do not exist yet, so the live graph has
-zero Trial nodes. This function still runs a real, parameterized query
-against the schema issue #2 already landed (`TRIAL`, `TRIAL_STATUSES`,
-`TARGETS_BIOMARKER`, `RECRUITS_FOR`). It returns `[]` today because the
-query returns zero rows -- the honest structural reason -- not because
-of a hand-written stub. The moment issue #8's loader writes Trial
-nodes, this file starts returning live Signals with no code change.
+Issue #7 (Trial Intelligence & Eligibility Matcher) and issue #8
+(`ctgov_loader.py`) have landed; the graph can contain Trial nodes.
+Issue #46 folded eligibility bucketing into this generator: a recruiting
+Trial still emits a documented `TRIAL` signal, and when a case plus
+criteria text are available a second `TRIAL_ELIGIBILITY` computed signal
+is emitted beside it. This module's dispatch behaviour is owned by #46;
+the shared lookup below must not change it.
 
 Actionable statuses (a documented subset of `TRIAL_STATUSES`):
 `RECRUITING`, `NOT_YET_RECRUITING`, `ENROLLING_BY_INVITATION`. Anything
@@ -72,6 +71,31 @@ WHERE t.status IN $actionable_statuses
 """
 
 
+def lookup_candidate_trials(
+    gene: str,
+    *,
+    disease: str | None = None,
+    graph,
+) -> list[tuple]:
+    """Shared Trial-node lookup used by `generate` and `match_trials_for_case`.
+
+    The Cypher RETURN list is the seven-column `_RETURN` issue #46 landed
+    (including `t.eligibility_criteria`). `generate` still unpacks the first
+    six columns defensively so older 6-column fixtures remain valid input.
+    """
+    params = {
+        "gene": gene,
+        "actionable_statuses": sorted(ACTIONABLE_TRIAL_STATUSES),
+    }
+    if disease:
+        params["disease"] = disease
+        cypher = _TRIALS_BY_GENE_AND_DISEASE
+    else:
+        cypher = _TRIALS_BY_GENE
+    result = graph.query(cypher, params=params)
+    return list(result.result_set)
+
+
 def generate(
     change_set: ChangeSet,
     question: Question,
@@ -93,21 +117,13 @@ def generate(
 
     graph = graph if graph is not None else connect_graph()
     disease = question.detail.get("cancer_type")
-    params = {
-        "gene": gene,
-        "actionable_statuses": sorted(ACTIONABLE_TRIAL_STATUSES),
-    }
-    if disease:
-        params["disease"] = disease
-        result = graph.query(_TRIALS_BY_GENE_AND_DISEASE, params=params)
-    else:
-        result = graph.query(_TRIALS_BY_GENE, params=params)
+    rows = lookup_candidate_trials(gene, disease=disease, graph=graph)
 
     signals: list[Signal] = []
     filtered_count = 0
     seen: set[str] = set()
 
-    for row in result.result_set:
+    for row in rows:
         # Unpacked defensively rather than by fixed arity: the criteria column
         # was added for issue #46, and a row set recorded before it (including
         # every already-merged test fixture) is still valid input.
