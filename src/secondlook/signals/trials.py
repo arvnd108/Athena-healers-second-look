@@ -1,13 +1,12 @@
 """Trials signal generator -- Cypher against the Trial label.
 
-The Trial Intelligence & Eligibility Matcher (issue #7) and
-`ctgov_loader.py` (issue #8) do not exist yet, so the live graph has
-zero Trial nodes. This function still runs a real, parameterized query
-against the schema issue #2 already landed (`TRIAL`, `TRIAL_STATUSES`,
-`TARGETS_BIOMARKER`, `RECRUITS_FOR`). It returns `[]` today because the
-query returns zero rows -- the honest structural reason -- not because
-of a hand-written stub. The moment issue #8's loader writes Trial
-nodes, this file starts returning live Signals with no code change.
+Issue #7 (Trial Intelligence & Eligibility Matcher) and issue #8
+(`ctgov_loader.py`) have landed; the graph can contain Trial nodes.
+Issue #46 folded eligibility bucketing into this generator: a recruiting
+Trial still emits a documented `TRIAL` signal, and when a case plus
+criteria text are available a second `TRIAL_ELIGIBILITY` computed signal
+is emitted beside it. This module's dispatch behaviour is owned by #46;
+the shared lookup below must not change it.
 
 Actionable statuses (a documented subset of `TRIAL_STATUSES`):
 `RECRUITING`, `NOT_YET_RECRUITING`, `ENROLLING_BY_INVITATION`. Anything
@@ -26,7 +25,9 @@ from datetime import datetime
 from secondlook.case.diff import ChangeSet
 from secondlook.case.questions import Question
 from secondlook.signals.mapping import batch_from, clock, gene_in_scope
+from secondlook.signals.trial_matching import MATCHER_VERSION
 from secondlook.signals.types import (
+    ComputedMethod,
     DocumentedSource,
     EvidenceClass,
     Signal,
@@ -52,7 +53,7 @@ assert ACTIONABLE_TRIAL_STATUSES <= TRIAL_STATUSES
 
 _RETURN = (
     "RETURN t.registry_id, t.registry, t.status, t.phase, "
-    "t.brief_title, t.eligibility_url "
+    "t.brief_title, t.eligibility_url, t.eligibility_criteria "
     "ORDER BY t.registry_id"
 )
 
@@ -70,12 +71,38 @@ WHERE t.status IN $actionable_statuses
 """
 
 
+def lookup_candidate_trials(
+    gene: str,
+    *,
+    disease: str | None = None,
+    graph,
+) -> list[tuple]:
+    """Shared Trial-node lookup used by `generate` and `match_trials_for_case`.
+
+    The Cypher RETURN list is the seven-column `_RETURN` issue #46 landed
+    (including `t.eligibility_criteria`). `generate` still unpacks the first
+    six columns defensively so older 6-column fixtures remain valid input.
+    """
+    params = {
+        "gene": gene,
+        "actionable_statuses": sorted(ACTIONABLE_TRIAL_STATUSES),
+    }
+    if disease:
+        params["disease"] = disease
+        cypher = _TRIALS_BY_GENE_AND_DISEASE
+    else:
+        cypher = _TRIALS_BY_GENE
+    result = graph.query(cypher, params=params)
+    return list(result.result_set)
+
+
 def generate(
     change_set: ChangeSet,
     question: Question,
     *,
     graph=None,
     dgidb_client=None,
+    case=None,
     now: datetime | None = None,
 ) -> SignalBatch:
     del dgidb_client
@@ -90,22 +117,18 @@ def generate(
 
     graph = graph if graph is not None else connect_graph()
     disease = question.detail.get("cancer_type")
-    params = {
-        "gene": gene,
-        "actionable_statuses": sorted(ACTIONABLE_TRIAL_STATUSES),
-    }
-    if disease:
-        params["disease"] = disease
-        result = graph.query(_TRIALS_BY_GENE_AND_DISEASE, params=params)
-    else:
-        result = graph.query(_TRIALS_BY_GENE, params=params)
+    rows = lookup_candidate_trials(gene, disease=disease, graph=graph)
 
     signals: list[Signal] = []
     filtered_count = 0
     seen: set[str] = set()
 
-    for row in result.result_set:
-        registry_id, registry, status, phase, brief_title, eligibility_url = row
+    for row in rows:
+        # Unpacked defensively rather than by fixed arity: the criteria column
+        # was added for issue #46, and a row set recorded before it (including
+        # every already-merged test fixture) is still valid input.
+        registry_id, registry, status, phase, brief_title, eligibility_url = row[:6]
+        criteria_text = row[6] if len(row) > 6 else None
         assert_valid(str(status) if status is not None else "", TRIAL_STATUSES, "status")
         if status not in ACTIONABLE_TRIAL_STATUSES:
             filtered_count += 1
@@ -140,6 +163,47 @@ def generate(
             )
         )
 
+        # Issue #46: when a case is available, also say whether THIS patient
+        # plausibly qualifies -- not merely that a matching trial is recruiting.
+        #
+        # Emitted as a second, `computed` signal rather than folded into the
+        # claim above. The registry published "this study is recruiting"; it did
+        # not publish "this patient probably does not qualify". Appending the
+        # verdict to a DOCUMENTED claim would put a computed conclusion behind
+        # that trial's citation, which is exactly the ambiguity
+        # IMPLEMENTATION_PLAN.md 9.2 tells the UI not to reintroduce -- and it
+        # would pass `Signal.__post_init__`, which guards `source` but cannot
+        # read free text in `claim`.
+        #
+        # Two signals per trial is the intended shape, not a compromise:
+        # types.py's docstring already assigns reconciliation to subsystem I/M
+        # ("rendering them side by side is subsystem I/M"), and 9.2's four
+        # visual treatments exist so a reader can tell the two apart at a glance.
+        if case is not None and criteria_text:
+            bucket, bucket_caveats = _bucket_for(str(ident), str(criteria_text), case)
+            signals.append(
+                Signal(
+                    kind=SignalKind.TRIAL_ELIGIBILITY,
+                    evidence_class=EvidenceClass.COMPUTED,
+                    claim=(
+                        f"For this case, {ident} reads as "
+                        f"{bucket.replace('_', ' ')} against its published criteria."
+                    ),
+                    source=ComputedMethod(
+                        method="signals.trial_matching.match_trial",
+                        version=MATCHER_VERSION,
+                    ),
+                    # Never above `low`: the extractor feeding this matcher is
+                    # scored against a corpus that has not reached the ~30
+                    # sections docs/trial-extraction-validation-plan.md targets,
+                    # so its accuracy numbers are still provisional.
+                    confidence="low",
+                    caveats=bucket_caveats,
+                    computed_at=when,
+                    generator_version=GENERATOR_VERSION,
+                )
+            )
+
     return batch_from(
         signals,
         filtered_count=filtered_count,
@@ -148,3 +212,49 @@ def generate(
             f"({filtered_count} filtered)"
         ),
     )
+
+
+#: Cap on criteria carried into a caveat list. A long exclusion section can run
+#: to dozens of lines, and a signal whose caveats are unreadable is a signal
+#: nobody reads.
+MAX_CAVEATS = 4
+
+
+def _bucket_for(trial_id: str, criteria_text: str, case) -> tuple[str, tuple[str, ...]]:
+    """Bucket one trial for one case, as (bucket, caveats).
+
+    Extraction is deliberately the rule-based path: this runs per patient per
+    query, and the LLM-assisted extractor is a one-time cached cost that belongs
+    in the loader, not here.
+    """
+    from secondlook.signals.trial_matching import match_trial
+    from secondlook.tier1.criteria_extraction import RuleBasedExtractor
+
+    predicates = RuleBasedExtractor().extract(trial_id, criteria_text).predicates
+    result = match_trial(trial_id, predicates, case)
+
+    caveats: list[str] = []
+    if result.violated_criteria:
+        caveats.append(
+            f"{len(result.violated_criteria)} criterion/criteria appear unmet: "
+            + "; ".join(c[:120] for c in result.violated_criteria[:MAX_CAVEATS])
+        )
+    if result.unresolved_criteria:
+        # Named explicitly, because "needs verification" without saying WHAT
+        # needs verifying gives a clinician nothing to act on.
+        caveats.append(
+            f"{len(result.unresolved_criteria)} criterion/criteria could not be "
+            "checked against this case: "
+            + "; ".join(c[:120] for c in result.unresolved_criteria[:MAX_CAVEATS])
+        )
+    unevaluable = result.unresolvable_predicate_types()
+    if unevaluable:
+        caveats.append(
+            "Criterion types this system cannot evaluate at all: "
+            + ", ".join(f"{k} x{v}" for k, v in sorted(unevaluable.items()))
+        )
+    caveats.append(
+        "Eligibility bucketing is a triage aid over registry text. It does not "
+        "read the protocol and cannot see anything the sponsor did not write down."
+    )
+    return result.bucket, tuple(caveats)

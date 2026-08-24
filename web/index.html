@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Athena — case memory</title>
+    <meta name="description" content="Athena / SecondLook case dashboard, research queue and findings." />
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>
+      <div style="max-width:46rem;margin:0 auto;padding:1rem;font:16px/1.5 system-ui,sans-serif">
+        <h1>JavaScript is off</h1>
+        <p>
+          The dashboard and research queue need it. The two read-mostly views do
+          not — findings and the tumour-board brief are served as plain HTML with
+          no JavaScript at all:
+        </p>
+        <ul>
+          <li><code>/cases/&lt;id&gt;/brief</code></li>
+          <li><code>/findings/&lt;id&gt;</code></li>
+        </ul>
+      </div>
+    </noscript>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

@@ -1,0 +1,33 @@
+{
+  "registry_id": "NCT00638898",
+  "source": "ClinicalTrials.gov v2",
+  "note": "Real registry text, fetched from the ClinicalTrials.gov v2 API. Annotations were read by hand against the source, not taken from extractor output. criteria_text is the complete eligibility section so C3 sees every line; the annotated lines are a seeded random sample (see docs/trial-extraction-validation-plan.md, Corpus).",
+  "criteria_text": "Inclusion\n\n* Patients with relapsed neuroblastoma, rhabdomyosarcoma, Ewing's sarcoma, PNET, brain tumors, soft tissue sarcomas, Wilm's tumors, germ cell tumors or other solid tumors who achieved at least partial response (PR) to chemotherapy, surgery, or radiotherapy\n* Newly diagnosed patients for poor-risk pediatric solid tumors: metastatic Ewing's, metastatic PNET, rhabdomyosarcoma, soft tissue sarcomas, octeomesenchymoma, and others that are at a high risk of relapse and who have achieved at least partial response (PR) to chemotherapy, surgery, or radiotherapy\n* For any of the above categories, an attempt to achieve a complete response (CR) or PR should be made; pre-transplant modalities may include surgery, chemotherapy, or radiation therapy; radiation must not include lung fields; only patients in CR or PR at the primary site will be eligible\n* HIGH-DOSE CHEMOTHERAPY: Histologically confirmed diagnosis by Anatomic Pathology Department; if recurrent or metastatic disease, histologic confirmation should be obtained, with the exception of brain stem tumors; in neuroblastoma, demonstration of marrow metastases with elevated urinary catecholamines is adequate for diagnosis\n* HIGH-DOSE CHEMOTHERAPY: No contraindications to the stem cell collection by apheresis or by bone marrow harvesting\n* HIGH-DOSE CHEMOTHERAPY: All patients, or their legal guardians must have signed a voluntary informed consent in accordance with the institutional and federal guidelines\n* HIGH-DOSE CHEMOTHERAPY: Adequate renal function as demonstrated by creatinine clearance (12 or 24 hour urine collection) or glomerular filtration rate (GFR) \\> 60 ml/min/1.73m\\^2\n* HIGH-DOSE CHEMOTHERAPY: Adequate cardiac function as demonstrated by ejection fraction \\> 55% by echocardiogram or MUGA\n* HIGH-DOSE CHEMOTHERAPY: Adequate hepatic function as demonstrated by bilirubin \\< 2 mg/dL, SGOT and SGPT \\< 5 x upper limits of normal\n* HIGH-DOSE CHEMOTHERAPY: Adequate bone marrow function as evidenced by platelet count \\> 50,000/ul and absolute granulocyte count \\>= 750 ul\n* HIGH-DOSE CHEMOTHERAPY: Adequate pulmonary function adults (older than 16 years): FEV1 \\> 2 liters, room air PaO2 \\> 70 mm Hg, room air PaCO2 \\< 42 mm Hg, and DLCO \\> 50% predicted; children (younger than 16 years): DLCO \\> 50% predicted\n* HIGH-DOSE CHEMOTHERAPY: Pretreatment tests and clinical and laboratory tests must have been performed within 4 weeks prior to initiation of high-dose chemotherapy\n* HIGH-DOSE CHEMOTHERAPY: No other medical and/or psychosocial problems which in the opinion of the primary physician or principal investigator would place the patient at unacceptable risk from this regimen\n* HIGH-DOSE CHEMOTHERAPY: Greater than 2-week period of recovery from prior modality used to control primary or recurrent site\n\nExclusion\n\n* Histologically confirmed bone marrow metastases within 30 days prior to transplant; prior bone marrow metastases with clearing of bone marrow (\\< 5% contamination as measured by bilateral bone marrow biopsies) at the time for evaluation for this protocol is acceptable\n* Karnofsky performance status \\< 60% or Lansky performance status \\< 50% for patients younger than 16 years old\n* Females of reproductive age who are not using adequate birth control measures or who are pregnant\n* HIV disease\n* Patients with prior treatment with myeloablative therapy are excluded",
+  "annotations": [
+    {
+      "line": "Newly diagnosed patients for poor-risk pediatric solid tumors: metastatic Ewing's, metastatic PNET, rhabdomyosarcoma, soft tissue sarcomas, octeomesenchymoma, and others that are at a high risk of relapse and who have achieved at least partial response (PR) to chemotherapy, surgery, or radiotherapy",
+      "type": "UNPARSEABLE",
+      "section": "unknown"
+    },
+    {
+      "line": "HIGH-DOSE CHEMOTHERAPY: Adequate renal function as demonstrated by creatinine clearance (12 or 24 hour urine collection) or glomerular filtration rate (GFR) > 60 ml/min/1.73m\\^2",
+      "type": "UNPARSEABLE",
+      "section": "unknown"
+    },
+    {
+      "line": "HIGH-DOSE CHEMOTHERAPY: Adequate cardiac function as demonstrated by ejection fraction > 55% by echocardiogram or MUGA",
+      "type": "UNPARSEABLE",
+      "section": "unknown"
+    },
+    {
+      "line": "HIGH-DOSE CHEMOTHERAPY: No other medical and/or psychosocial problems which in the opinion of the primary physician or principal investigator would place the patient at unacceptable risk from this regimen",
+      "type": "UNPARSEABLE",
+      "section": "unknown"
+    },
+    {
+      "line": "Histologically confirmed bone marrow metastases within 30 days prior to transplant; prior bone marrow metastases with clearing of bone marrow (< 5% contamination as measured by bilateral bone marrow biopsies) at the time for evaluation for this protocol is acceptable",
+      "type": "UNPARSEABLE",
+      "section": "unknown"
+    }
+  ]
+}

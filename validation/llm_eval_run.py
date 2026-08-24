@@ -10,6 +10,7 @@ Usage::
     python validation/llm_eval_run.py --subsystem synthesis
     python validation/llm_eval_run.py --subsystem synthesis --grounded-comparison
     python validation/llm_eval_run.py --subsystem criteria_extraction
+    python validation/llm_eval_run.py --subsystem intake
 
 Output: `validation/llm_eval_results.md`
 
@@ -31,6 +32,9 @@ from harness.eval_sets.synthesis import SYNTHESIS_EVAL_CASES  # noqa: E402
 
 from secondlook.harness.adapters.criteria_extraction import (  # noqa: E402
     evaluate_existing_corpus,
+)
+from secondlook.harness.adapters.intake import (  # noqa: E402
+    evaluate_eval_set as evaluate_intake_eval_set,
 )
 from secondlook.harness.adapters.synthesis import (  # noqa: E402
     SYNTHESIS_PROMPT_TEMPLATE_ID,
@@ -91,11 +95,21 @@ def run_synthesis_comparison() -> GroundingComparison:
     )
 
 
+def run_intake_eval() -> EvalResult:
+    client = get_llm_client()
+    if client is None:
+        raise RuntimeError(
+            "intake eval needs a configured LLM client "
+            "(ATHENA_LLM_ENABLED is off, or provider config is missing)"
+        )
+    return evaluate_intake_eval_set(llm_client=client)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--subsystem",
-        choices=["synthesis", "criteria_extraction", "all"],
+        choices=["synthesis", "criteria_extraction", "intake", "all"],
         default="all",
     )
     parser.add_argument(
@@ -105,10 +119,10 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    if args.grounded_comparison and args.subsystem == "criteria_extraction":
+    if args.grounded_comparison and args.subsystem in {"criteria_extraction", "intake"}:
         print(
-            "error: --grounded-comparison is not valid with "
-            "--subsystem criteria_extraction. criteria_extraction has no "
+            f"error: --grounded-comparison is not valid with "
+            f"--subsystem {args.subsystem}. {args.subsystem} has no "
             "ungrounded variant by design, not by omission.",
             file=sys.stderr,
         )
@@ -127,6 +141,8 @@ def main(argv: list[str] | None = None) -> int:
                 results.append(run_synthesis_eval())
         if args.subsystem in {"criteria_extraction", "all"}:
             results.append(run_criteria_extraction())
+        if args.subsystem in {"intake", "all"}:
+            results.append(run_intake_eval())
     except RuntimeError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2

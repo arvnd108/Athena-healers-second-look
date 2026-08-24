@@ -47,6 +47,7 @@ def generate(
     *,
     graph=None,
     dgidb_client=None,
+    case=None,  # shared injectable surface with dispatch(); unused here
     now: datetime | None = None,
     retrieve_for_gene_fn=retrieve_semantic_for_gene,
     retrieve_fn=retrieve_semantic,
