@@ -177,3 +177,80 @@ class TestPredicateRoundTrip:
             value=2.0,
         )
         assert Predicate.from_dict(json.loads(json.dumps(predicate.to_dict()))) == predicate
+
+
+class TestDefectsFoundByExpandingTheCorpus:
+    """Every case here is real registry text that produced a *confidently wrong*
+    predicate -- the one outcome docs/trial-extraction-validation-plan.md gives
+    zero tolerance, because a wrong predicate buckets a patient with no signal
+    that anything went awry."""
+
+    def test_non_inclusion_criteria_is_an_exclusion_header(self, extractor):
+        """NCT04055220 heads its exclusions "NON-INCLUSION CRITERIA :". That
+        matched no header at all, so all 60-odd of them stayed attributed to the
+        inclusion header above -- inverting every one."""
+        pairs = split_criteria(
+            "INCLUSION CRITERIA :\n* I1. Age >= 12 years\n"
+            "NON-INCLUSION CRITERIA :\n* E1. Prior treatment with any VEGFR inhibitor\n"
+        )
+        assert [section for section, _ in pairs] == ["inclusion", "exclusion"]
+
+    def test_non_inclusion_does_not_also_read_as_inclusion(self):
+        assert split_criteria("NON-INCLUSION CRITERIA :\n* A\n")[0][0] == "exclusion"
+
+    @pytest.mark.parametrize("header", ["Ineligibility Criteria:", "Non Inclusion Criteria:"])
+    def test_other_exclusion_spellings(self, header):
+        assert split_criteria(f"{header}\n* A\n")[0][0] == "exclusion"
+
+    def test_a_decimal_elsewhere_on_the_line_is_not_a_performance_score(self, extractor):
+        """Measured on NCT00004157, a legacy record whose whole patient section is
+        one line: the bare-number rule matched the "2" of a bilirubin limit of
+        "2.5" and capped ECOG at 2."""
+        line = (
+            "PATIENT CHARACTERISTICS: Age: 70 and under Performance status: Not specified "
+            "Hepatic: Bilirubin no greater than 2.5 times upper limit of normal"
+        )
+        assert extractor._line_to_predicate("unknown", line).type != "ECOG_MAX"
+
+    def test_performance_status_with_no_score_near_it_is_not_extracted(self, extractor):
+        predicate = extractor._line_to_predicate("inclusion", "Performance status: Not specified")
+        assert predicate.type == "UNPARSEABLE"
+
+    @pytest.mark.parametrize(
+        "line",
+        [
+            "Age: >= 16 years; Male: 1.7 mg/dL; Female: 1.4 mg/dL",
+            "Age 2 to < 6 years: maximum serum creatinine 0.8 mg/dL for male and 0.8 for female",
+        ],
+    )
+    def test_an_age_keying_a_lab_limit_is_not_an_eligibility_bound(self, extractor, line):
+        """NCT03320330 and NCT03213652 tabulate creatinine limits by age band.
+        Read as "must be 16 or older" this excludes younger patients the trial
+        accepts, and the trial says nothing of the kind."""
+        predicate = extractor._line_to_predicate("inclusion", line)
+        assert predicate.type == "UNPARSEABLE"
+        assert "laboratory limit" in predicate.reason
+
+    def test_an_age_defining_menopausal_status_is_not_an_eligibility_bound(self, extractor):
+        """NCT01692496: the age says when menopause may be assumed, not who may
+        enrol."""
+        line = (
+            "Female subjects not using hormone replacement therapy must have experienced "
+            "total cessation of menses for >= 1 year and be greater than 45 years in age"
+        )
+        assert extractor._line_to_predicate("inclusion", line).type == "UNPARSEABLE"
+
+    def test_a_plain_age_bound_still_extracts(self, extractor):
+        """The guards above must not cost the ordinary case."""
+        predicate = extractor._line_to_predicate(
+            "inclusion", "I1. Age >= 12 years at the day of consenting to the study;"
+        )
+        assert predicate.type == "AGE_RANGE"
+        assert predicate.value == "12-"
+
+    def test_a_plain_ecog_cap_still_extracts(self, extractor):
+        predicate = extractor._line_to_predicate(
+            "inclusion", "Eastern Cooperative Oncology Group (ECOG) Performance Status (PS) 0-2"
+        )
+        assert predicate.type == "ECOG_MAX"
+        assert predicate.value == 2.0

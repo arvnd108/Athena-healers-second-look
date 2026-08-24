@@ -43,6 +43,7 @@ def generate(
     *,
     graph=None,
     dgidb_client=None,  # shared injectable surface with dispatch(); unused here
+    case=None,  # shared injectable surface with dispatch(); unused here
     now: datetime | None = None,
     retrieve_exact_fn=retrieve_exact,
     retrieve_relaxed_fn=retrieve_relaxed,

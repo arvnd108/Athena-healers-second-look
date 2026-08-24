@@ -1,0 +1,33 @@
+{
+  "registry_id": "NCT00856050",
+  "source": "ClinicalTrials.gov v2",
+  "note": "Real registry text, fetched from the ClinicalTrials.gov v2 API. Annotations were read by hand against the source, not taken from extractor output. criteria_text is the complete eligibility section so C3 sees every line; the annotated lines are a seeded random sample (see docs/trial-extraction-validation-plan.md, Corpus).",
+  "criteria_text": "Inclusion Criteria:\n\n* Histologically or cytologically confirmed, advanced estrogen (ER)/progesterone receptor (PR) positive leiomyosarcoma of uterine origin, for which standard multi-modality curative therapies do not exist or are no longer effective\n* Patients must be postmenopausal. Postmenopausal is defined as any of the following: 1)Bilateral oophorectomy 2) 60 years of age or older 3)Younger than 60 AND amenorrheic for 12 months or more AND follicle stimulating hormone (FSH) and estradiol (E2) within postmenopausal range 4)Ovarian ablation radiotherapy confirmed by FSH and estradiol (E2) level in the postmenopausal range\n* Evidence of ER and/or PR positivity, either in primary or secondary tumor tissue\n* Measurable disease outside of a prior irradiated area as defined by RECIST guidelines. A lesion in a previously irradiated area is not eligible for measurable diseae unless there is objective evidence of progression of the lesion prior to study enrollment\n* 18 years of age or older\n* Life expectancy of 3 months or more\n* ECOG Performance Status 0, 1, or 2\n* No limit to number of prior chemotherapies or biologics\n* Normal organ function as outlined in the protocol\n* Resolution of clinically significant toxicities related to prior therapies\n\nExclusion Criteria:\n\n* Pre-menopausal women\n* Participants who have had systemic anti-cancer therapy within 3 weeks of study entry (8 weeks for nitrosoureas or mitomycin C)\n* Palliative radiotherapy within 2 weeks of study entry\n* Major surgery within 2 weeks of study entry\n* Prior hormonal therapy for the treatment of uterine leiomyosarcoma (prior hormone replacement therapy is allowed)\n* Participants may not be receiving any other concomitant investigational agents\n* Uncontrolled brain or central nervous system metastases\n* History of allergic reactions attributed to compounds of similar chemical or biologic composition to letrozole\n* Uncontrolled intercurrent illness including, but not limited to ongoing or active infection, symptomatic congestive heart failure, unstable angina pectoris, cardiac arrhythmia, or psychiatric illness/social situations that would limit compliance with study requirements\n* Individuals with a history of a different malignancy, other than cervical cancer in situ, basal cell or squamous cell carcinoma of the skin, are ineligible, except if they have been disease-free for at least 5 years, and are deemed by the investigator to be at low risk for recurrence of that malignancy OR other primary malignancy is neither currently clinically significant nor requiring active intervention",
+  "annotations": [
+    {
+      "line": "Evidence of ER and/or PR positivity, either in primary or secondary tumor tissue",
+      "type": "BIOMARKER_REQUIRES",
+      "section": "inclusion"
+    },
+    {
+      "line": "ECOG Performance Status 0, 1, or 2",
+      "type": "ECOG_MAX",
+      "section": "inclusion"
+    },
+    {
+      "line": "Palliative radiotherapy within 2 weeks of study entry",
+      "type": "PRIOR_THERAPY_EXCLUDES",
+      "section": "exclusion"
+    },
+    {
+      "line": "Prior hormonal therapy for the treatment of uterine leiomyosarcoma (prior hormone replacement therapy is allowed)",
+      "type": "PRIOR_THERAPY_EXCLUDES",
+      "section": "exclusion"
+    },
+    {
+      "line": "History of allergic reactions attributed to compounds of similar chemical or biologic composition to letrozole",
+      "type": "UNPARSEABLE",
+      "section": "exclusion"
+    }
+  ]
+}

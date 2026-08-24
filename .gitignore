@@ -25,3 +25,6 @@ MdrDB/
 # `python validation/run_gold_standard.py`. Committed demo payloads are the
 # exception — force-add those deliberately.
 validation/cache/
+
+# Local Claude Code worktrees -- never part of a change.
+.claude/

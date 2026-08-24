@@ -277,6 +277,12 @@ def evaluate_predicate(predicate: Predicate, case) -> CriterionOutcome:
     )
 
 
+#: Stamped onto every `computed` signal this matcher produces, so a verdict in
+#: the graph can be traced to the rules that produced it. Bump when a bucket
+#: boundary or a predicate evaluator changes, not for refactors.
+MATCHER_VERSION = "signals.trial_matching/1"
+
+
 def match_trial(trial_id: str, predicates: list[Predicate], case) -> TrialMatchResult:
     """Bucket one trial for one case.
 

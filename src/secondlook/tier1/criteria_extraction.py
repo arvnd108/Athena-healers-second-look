@@ -123,7 +123,15 @@ class ExtractionModel(Protocol):
 #: "Criteria" silently left whole sections marked `unknown`, which loses the
 #: inclusion/exclusion sense that inverts every criterion's meaning.
 _INCLUSION_HEADER = re.compile(r"^\s*[*\-•]?\s*(?:\d+[.)]\s*)?inclusion\s+criteria\b", re.I)
-_EXCLUSION_HEADER = re.compile(r"^\s*[*\-•]?\s*(?:\d+[.)]\s*)?exclusion\s+criteria\b", re.I)
+#: "Exclusion Criteria" is not the only spelling. NCT04055220 writes
+#: "NON-INCLUSION CRITERIA :", which matched no header at all, so every one
+#: of its 60-odd exclusion criteria stayed attributed to the inclusion header
+#: above them -- inverting the meaning of all of them.
+_EXCLUSION_HEADER = re.compile(
+    r"^\s*[*\-•]?\s*(?:\d+[.)]\s*)?"
+    r"(?:exclusion|non[\s\-]?inclusion|ineligibility)\s+criteria\b",
+    re.I,
+)
 
 #: ClinicalTrials.gov escapes comparison operators in its own free text
 #: ("Bilirubin \> 3.0"). Left in place they defeat every numeric pattern here.
@@ -181,7 +189,33 @@ _ECOG_WORD = re.compile(r"\becog\b|\bperformance\s+status\b|\bkarnofsky\b", re.I
 #: the cap would exclude exactly the patients the trial is most open to.
 _ECOG_RANGE = re.compile(r"\b[0-4]\s*(?:[-–—]|\bto\b|\bor\b)\s*([0-4])\b", re.I)
 _ECOG_VALUE = re.compile(r"(?:<=|≤|of|is|:|score|status)\s*([0-4])\b", re.I)
-_ECOG_BARE = re.compile(r"\b([0-4])\b")
+#: Not `\b([0-4])\b`: that matched the "2" of a bilirubin limit of "2.5"
+#: sixty characters away and capped ECOG at 2. A performance score is a
+#: whole number, so a digit adjacent to a decimal point is not one.
+_ECOG_BARE = re.compile(r"(?<![\d.])([0-4])(?![\d.])")
+
+#: How far after the "ECOG"/"performance status" mention to look for its
+#: value. Sponsors put the score next to the words; a number further away
+#: belongs to a different criterion sharing the same line, which is common
+#: in legacy records where a whole patient-characteristics section is one line.
+_ECOG_WINDOW = 40
+
+#: An age paired with a laboratory value is a lookup key, not an eligibility
+#: bound: "Age: >= 16 years; Male: 1.7 mg/dL" sets a creatinine limit for
+#: 16-year-olds, and reading it as "must be 16 or older" would exclude
+#: younger patients the trial accepts.
+_LAB_UNIT = re.compile(
+    r"\b(?:mg|g|µg|mcg|ng|mmol|µmol|umol|mEq|IU|U|mL|L)\s*/\s*(?:d?[LlmM]|min|kg|24)"
+    r"|\bmm3\b|\b10\^?\d?\s*/\s*L\b|\bx\s*10\d?\s*/\s*L\b|\bULN\b",
+    re.I,
+)
+#: Likewise an age inside a definition of post-menopausal status describes
+#: when menopause is assumed, not who may enrol.
+_MENOPAUSE = re.compile(r"menopaus|\bmenses\b|hormone\s+replacement", re.I)
+
+#: How far after the age match a laboratory unit still counts as attached to
+#: it. Beyond this the two are separate criteria that share a line.
+_AGE_LAB_WINDOW = 60
 _PRIOR_THERAPY = re.compile(
     r"\b(?:prior|previous|preceding|received|treated\s+with)\b[^.\n]{0,80}?"
     r"\b(?:therapy|therapies|treatment|chemotherapy|inhibitor|agent|regimen)\b",
@@ -310,8 +344,13 @@ class RuleBasedExtractor:
     def _line_to_predicate(self, section: CriterionSection, line: str) -> Predicate:
         # ECOG first: "ECOG 0-2" also contains a bare number that the age
         # patterns would otherwise be tempted by.
-        if _ECOG_WORD.search(line):
-            match = _ECOG_RANGE.search(line) or _ECOG_VALUE.search(line) or _ECOG_BARE.search(line)
+        if ecog_word := _ECOG_WORD.search(line):
+            window = line[ecog_word.start() : ecog_word.end() + _ECOG_WINDOW]
+            match = (
+                _ECOG_RANGE.search(window)
+                or _ECOG_VALUE.search(window)
+                or _ECOG_BARE.search(window)
+            )
             if match:
                 return Predicate(
                     type="ECOG_MAX",
@@ -325,6 +364,20 @@ class RuleBasedExtractor:
         if _AGE_WORD.search(line):
             low = _AGE_MIN.search(line)
             high = _AGE_MAX.search(line)
+            anchor = low or high
+            if anchor and (
+                _MENOPAUSE.search(line)
+                or _LAB_UNIT.search(line[anchor.end() : anchor.end() + _AGE_LAB_WINDOW])
+            ):
+                return Predicate(
+                    type="UNPARSEABLE",
+                    source_text=line,
+                    section=section,
+                    reason=(
+                        "states an age, but as a key to a laboratory limit or a "
+                        "definition of menopausal status, not as an eligibility bound"
+                    ),
+                )
             if low or high:
                 return Predicate(
                     type="AGE_RANGE",
