@@ -220,6 +220,9 @@ class CaseStore:
         self._session.flush()
         return finding
 
+    def get_finding(self, finding_id: uuid.UUID) -> Finding | None:
+        return self._session.get(Finding, finding_id)
+
     def list_active_findings(self, case_id: uuid.UUID) -> tuple[DomainFinding, ...]:
         """Active domain Findings for this case, `created_at` ascending.
 

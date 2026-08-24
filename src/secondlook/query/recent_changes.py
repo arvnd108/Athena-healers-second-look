@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from secondlook.case.diff import compute_diff
+from secondlook.case.diff import ChangeSet, compute_diff
 from secondlook.query.contracts import (
     ChangeDescription,
     ChangeSetForApi,
@@ -21,6 +21,38 @@ from secondlook.query.contracts import (
 )
 from secondlook.query.fold import fold_store_events
 from secondlook.query.result import QueryResult
+
+
+def compute_recent_diff(
+    store,
+    case_id,
+    *,
+    since: datetime | None = None,
+    biomarker_thresholds: dict[str, float] | None = None,
+) -> tuple[ChangeSet | None, str | None]:
+    """Domain ChangeSet using the same boundary rules as `get_recent_changes`.
+
+    Returns `(None, None)` when the case has no events. `since=None` picks the
+    boundary by `recorded_at`; an explicit `since` is clinical `occurred_at`.
+    """
+    thresholds = {} if biomarker_thresholds is None else biomarker_thresholds
+    events = list(store.list_events(case_id))
+    if not events:
+        return None, None
+
+    if since is None:
+        boundary = max(events, key=lambda e: e.recorded_at)
+        previous_events = [e for e in events if e.id != boundary.id]
+        boundary_id = str(boundary.id)
+    else:
+        previous_events = [e for e in events if e.occurred_at <= since]
+        boundary_id = None
+
+    previous = fold_store_events(case_id, previous_events)
+    current = fold_store_events(case_id, events)
+    findings = store.list_active_findings(case_id)
+    change_set = compute_diff(previous, current, findings, biomarker_thresholds=thresholds)
+    return change_set, boundary_id
 
 
 def get_recent_changes(
@@ -32,25 +64,11 @@ def get_recent_changes(
     biomarker_thresholds: dict[str, float] | None = None,
 ) -> QueryResult[ChangeSetForApi]:
     """See module docstring for timestamp rules and the thresholds gap."""
-    thresholds = {} if biomarker_thresholds is None else biomarker_thresholds
-    events = list(store.list_events(case_id))
-    if not events:
+    change_set, boundary_id = compute_recent_diff(
+        store, case_id, since=since, biomarker_thresholds=biomarker_thresholds
+    )
+    if change_set is None:
         return QueryResult(empty_reason="no events recorded for this case")
-
-    if since is None:
-        boundary = max(events, key=lambda e: e.recorded_at)
-        previous_events = [e for e in events if e.id != boundary.id]
-        boundary_id = str(boundary.id)
-    else:
-        previous_events = [e for e in events if e.occurred_at <= since]
-        boundary = None
-        boundary_id = None
-
-    # Two folds are required (previous prefix vs full log). Each happens once.
-    previous = fold_store_events(case_id, previous_events)
-    current = fold_store_events(case_id, events)
-    findings = store.list_active_findings(case_id)
-    change_set = compute_diff(previous, current, findings, biomarker_thresholds=thresholds)
 
     changes = [
         ChangeDescription(
