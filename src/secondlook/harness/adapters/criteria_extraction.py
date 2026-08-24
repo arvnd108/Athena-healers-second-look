@@ -35,9 +35,29 @@ CriteriaExtractionViolation = Literal[
 
 
 def _load_trial_extraction_accuracy():
-    """Load the existing validator by path so it is not rewritten or copied."""
+    """Load the existing validator by path so it is not rewritten or copied.
+
+    Lazy and cached, not module-level-eager: `validation/` sits outside
+    `[tool.setuptools.packages.find] where = ["src"]`, so it ships in this
+    git checkout but not in a built wheel (`.github/workflows/release.yml`
+    runs `python -m build` against `src/` only). Running this at import
+    time would crash any caller that merely imports this adapter module in
+    an installed-package context, even one that never calls
+    `evaluate_existing_corpus()`. Deferring to first call keeps the module
+    itself import-safe everywhere; only the corpus-evaluation feature
+    requires a repo checkout, which is true of `validation/`'s other
+    scripts too (e.g. `run_gold_standard.py`'s cache directory) and is a
+    reasonable requirement for a repo-validation tool, just not for
+    importing the module that wraps it.
+    """
     repo_root = Path(__file__).resolve().parents[4]
     path = repo_root / "validation" / "trial_extraction_accuracy.py"
+    if not path.is_file():
+        raise RuntimeError(
+            f"{path} not found -- evaluate_existing_corpus() requires a full "
+            "Athena git checkout (this is a repo-validation feature, not "
+            "something available from an installed secondlook package)."
+        )
     spec = importlib.util.spec_from_file_location("trial_extraction_accuracy", path)
     if spec is None or spec.loader is None:
         raise ImportError(f"cannot load {path}")
@@ -49,11 +69,15 @@ def _load_trial_extraction_accuracy():
     return module
 
 
-_tea = _load_trial_extraction_accuracy()
+_tea_cache: Any | None = None
 
-#: Same number, same criterion as trial_extraction_accuracy.C2_THRESHOLD.
-#: Do not invent a different threshold for the same measurement.
-CRITERIA_EXTRACTION_THRESHOLD: float = _tea.C2_THRESHOLD
+
+def _tea() -> Any:
+    global _tea_cache
+    if _tea_cache is None:
+        _tea_cache = _load_trial_extraction_accuracy()
+    return _tea_cache
+
 
 CRITERIA_EXTRACTION_SUBSYSTEM = "criteria_extraction"
 # The existing validator scores RuleBasedExtractor. When that script grows
@@ -62,9 +86,20 @@ CRITERIA_EXTRACTION_SUBSYSTEM = "criteria_extraction"
 CRITERIA_EXTRACTION_PROMPT_TEMPLATE_ID = "criteria_extraction/rule_based"
 
 
+def criteria_extraction_threshold() -> float:
+    """Same number, same criterion as trial_extraction_accuracy.C2_THRESHOLD.
+
+    Do not invent a different threshold for the same measurement. A
+    function, not a module constant, for the same import-safety reason
+    `_tea()` is lazy -- see `_load_trial_extraction_accuracy`'s docstring.
+    """
+    return _tea().C2_THRESHOLD
+
+
 def evaluate_existing_corpus() -> EvalResult:
     """Run the existing fixture corpus through the wrapped validator."""
-    return from_trial_extraction_report(_tea.score(_tea.load_fixtures()))
+    tea = _tea()
+    return from_trial_extraction_report(tea.score(tea.load_fixtures()))
 
 
 def from_trial_extraction_report(report: Any) -> EvalResult:
@@ -76,6 +111,7 @@ def from_trial_extraction_report(report: Any) -> EvalResult:
     BLOCKED verdict via `derive_verdict` -- not a local copy of that
     precedence. C4 remains owned by the original script's own exit code.
     """
+    threshold = criteria_extraction_threshold()
     correct, total = report.c2_regular_recall
     pass_rate = 1.0 if total == 0 else correct / total
     violations: list[str] = []
@@ -87,7 +123,7 @@ def from_trial_extraction_report(report: Any) -> EvalResult:
         subsystem=CRITERIA_EXTRACTION_SUBSYSTEM,
         prompt_template_id=CRITERIA_EXTRACTION_PROMPT_TEMPLATE_ID,
         pass_rate=pass_rate,
-        threshold=CRITERIA_EXTRACTION_THRESHOLD,
+        threshold=threshold,
         safety_violations=violations,
-        verdict=derive_verdict(pass_rate, CRITERIA_EXTRACTION_THRESHOLD, violations),
+        verdict=derive_verdict(pass_rate, threshold, violations),
     )
