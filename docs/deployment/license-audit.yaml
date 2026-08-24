@@ -1,0 +1,244 @@
+# Checked-in license audit for every direct dependency declared in
+# pyproject.toml and web/package.json.
+#
+# Enforced by tests/deployment/test_license_audit.py, which fails CI if:
+#   1. A dependency in pyproject.toml/package.json has no entry here (a
+#      new dependency was added without an audited license), or
+#   2. An entry's license is in DENYLIST (see that test file).
+#
+# This is a static, offline, no-network-call check by design, matching
+# this repo's existing convention (e.g. NO_PHI_COLUMN_PATTERN in
+# case/models.py) — a live PyPI/npm lookup in CI would be fragile and
+# non-deterministic. When you add a dependency, add its entry here in
+# the same PR; license, checked_via, and checked_on are all required.
+#
+# License field is the SPDX identifier where the package declares one
+# (PyPI's `license_expression` / npm's `license` field), not a paraphrase.
+
+python:
+  # Core — always installed, no extra required
+  hgvs:
+    license: Apache-2.0
+    group: core
+    checked_via: PyPI license_expression
+    checked_on: "2026-08-24"
+  httpx:
+    license: BSD-3-Clause
+    group: core
+    checked_via: PyPI license_expression
+    checked_on: "2026-08-24"
+  falkordb:
+    license: MIT
+    group: core
+    checked_via: PyPI classifier
+    checked_on: "2026-08-24"
+  pyyaml:
+    license: MIT
+    group: core
+    checked_via: PyPI classifier
+    checked_on: "2026-08-24"
+
+  # api extra
+  fastapi:
+    license: MIT
+    group: api
+    checked_via: PyPI license_expression
+    checked_on: "2026-08-24"
+  uvicorn:
+    license: BSD-3-Clause
+    group: api
+    checked_via: PyPI license_expression
+    checked_on: "2026-08-24"
+  sqlalchemy:
+    license: MIT
+    group: api
+    checked_via: PyPI classifier
+    checked_on: "2026-08-24"
+  psycopg:
+    license: LGPL-3.0-only
+    group: api
+    checked_via: PyPI license_expression
+    checked_on: "2026-08-24"
+    note: >
+      Copyleft, but LGPL explicitly permits use by a work under any
+      license (including a proprietary one) as long as psycopg itself
+      isn't modified without sharing those specific changes. No conflict
+      with Athena's own AGPL-3.0 license or with the commercial-license
+      option — a downstream commercial licensee still just uses psycopg
+      as an unmodified dependency.
+  alembic:
+    license: MIT
+    group: api
+    checked_via: PyPI license_expression
+    checked_on: "2026-08-24"
+  pydantic:
+    license: MIT
+    group: api
+    checked_via: PyPI license_expression
+    checked_on: "2026-08-24"
+  anthropic:
+    license: MIT
+    group: api
+    checked_via: PyPI classifier
+    checked_on: "2026-08-24"
+  mcp:
+    license: MIT
+    group: api
+    checked_via: PyPI classifier
+    checked_on: "2026-08-24"
+
+  # dev extra — never shipped to a deployed instance
+  pytest:
+    license: MIT
+    group: dev
+    checked_via: PyPI license_expression
+    checked_on: "2026-08-24"
+  pytest-cov:
+    license: MIT
+    group: dev
+    checked_via: PyPI classifier
+    checked_on: "2026-08-24"
+  ruff:
+    license: MIT
+    group: dev
+    checked_via: PyPI license_expression
+    checked_on: "2026-08-24"
+  black:
+    license: MIT
+    group: dev
+    checked_via: PyPI license_expression
+    checked_on: "2026-08-24"
+
+  # structural extra — Tier 2 structural prediction only
+  playwright:
+    license: Apache-2.0
+    group: structural
+    checked_via: PyPI license_expression
+    checked_on: "2026-08-24"
+  vina:
+    license: Apache-2.0
+    group: structural
+    checked_via: PyPI license_expression
+    checked_on: "2026-08-24"
+  meeko:
+    license: LGPL-2.1-or-later
+    group: structural
+    checked_via: PyPI license_expression
+    checked_on: "2026-08-24"
+    note: Same LGPL reasoning as psycopg above — permitted as a dependency regardless of Athena's own license.
+  rdkit:
+    license: BSD-3-Clause
+    group: structural
+    checked_via: PyPI license_expression
+    checked_on: "2026-08-24"
+  pdbfixer:
+    license: MIT
+    group: structural
+    checked_via: PyPI classifier
+    checked_on: "2026-08-24"
+  scipy:
+    license: BSD-3-Clause
+    group: structural
+    checked_via: PyPI classifier
+    checked_on: "2026-08-24"
+  gemmi:
+    license: MPL-2.0
+    group: structural
+    checked_via: PyPI classifier
+    checked_on: "2026-08-24"
+    note: >
+      Weak copyleft, file-level (not project-level) — MPL-2.0 only
+      requires sharing changes to gemmi's own source files, and is
+      explicitly designed to be safely combined with a project under a
+      different license (including AGPL). No conflict.
+
+  # semantic extra — Mode 3 retrieval only
+  sentence-transformers:
+    license: Apache-2.0
+    group: semantic
+    checked_via: PyPI license_expression
+    checked_on: "2026-08-24"
+
+javascript:
+  # web/package.json dependencies (shipped in the built bundle) and
+  # devDependencies (build tooling only, never shipped)
+  react:
+    license: MIT
+    group: dependencies
+    checked_via: npm registry
+    checked_on: "2026-08-24"
+  react-dom:
+    license: MIT
+    group: dependencies
+    checked_via: npm registry
+    checked_on: "2026-08-24"
+  react-router-dom:
+    license: MIT
+    group: dependencies
+    checked_via: npm registry
+    checked_on: "2026-08-24"
+  vite:
+    license: MIT
+    group: devDependencies
+    checked_via: npm registry
+    checked_on: "2026-08-24"
+  vitest:
+    license: MIT
+    group: devDependencies
+    checked_via: npm registry
+    checked_on: "2026-08-24"
+  "@testing-library/jest-dom":
+    license: MIT
+    group: devDependencies
+    checked_via: npm registry
+    checked_on: "2026-08-24"
+  "@testing-library/react":
+    license: MIT
+    group: devDependencies
+    checked_via: npm registry
+    checked_on: "2026-08-24"
+  "@vitejs/plugin-react":
+    license: MIT
+    group: devDependencies
+    checked_via: npm registry
+    checked_on: "2026-08-24"
+  "@vitest/coverage-v8":
+    license: MIT
+    group: devDependencies
+    checked_via: npm registry
+    checked_on: "2026-08-24"
+  jsdom:
+    license: MIT
+    group: devDependencies
+    checked_via: npm registry
+    checked_on: "2026-08-24"
+
+# Infrastructure images used by docker-compose.yml — not a code dependency
+# in the pip/npm sense, but part of what a deployer actually runs, so
+# audited the same way for the same transparency reasons.
+infrastructure:
+  postgres:
+    license: PostgreSQL License
+    source: postgres:16 (Docker Hub official image)
+    checked_on: "2026-08-24"
+    note: Permissive, OSI-approved, MIT/BSD-style. No restrictions relevant to this deployment.
+  nginx:
+    license: BSD-2-Clause
+    source: nginx:1.27-alpine (web/Dockerfile)
+    checked_on: "2026-08-24"
+  falkordb-server:
+    license: SSPL-1.0 (Server Side Public License)
+    source: falkordb/falkordb:latest (Docker Hub)
+    checked_on: "2026-08-24"
+    note: >
+      IMPORTANT — distinct from the `falkordb` PYTHON CLIENT above, which
+      is separately MIT-licensed. The FalkorDB DATABASE SERVER itself is
+      SSPL-1.0, which is source-available but NOT an OSI-approved
+      open-source license — its restrictive clause specifically targets
+      offering FalkorDB itself as a competing hosted database service to
+      third parties. Running FalkorDB as an internal backend component of
+      an Athena deployment (what this docker-compose.yml does) is not
+      the scenario SSPL restricts. Flagged here for transparency, not
+      because it currently blocks anything: Athena's own license claims
+      are about Athena's own code, not about every infrastructure
+      component it happens to run alongside.

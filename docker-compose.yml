@@ -1,10 +1,26 @@
-# Local FalkorDB for the Tier 1 knowledge-graph retrieval service.
+# The full Athena stack — Subsystem O (Open-Source Deployment & Cost
+# Architecture). One command to a running instance:
 #
-# Start:   docker compose up -d
-# Stop:    docker compose down
-# Browser: http://localhost:3000  (graph UI, no password in this compose)
+#   cp .env.example .env   # then set a real ATHENA_API_KEY at minimum
+#   docker compose up -d
 #
-# If you do not have Docker:
+# Stop:      docker compose down
+# Frontend:  http://localhost:8080
+# API:       http://localhost:8000  (docs at /docs)
+# Graph UI:  http://localhost:3000  (no password in this compose)
+#
+# Service map:
+#   falkordb  — Evidence Memory, the knowledge graph (Tier 1)
+#   postgres  — Case Memory Store (src/secondlook/case/)
+#   migrate   — runs `alembic upgrade head` once, then exits; api waits for it
+#   api       — the REST API (src/secondlook/api/), issue #59
+#   web       — Subsystem M, the low-bandwidth React frontend, served by nginx
+#
+# This is a single-server deployment target, not a scaled/HA one — see
+# docs/deployment/hardware-sizing.md for the spec this was sized against.
+#
+# If you do not have Docker, or only need the knowledge graph (Tier 1/Tier 2
+# development without the case-memory API):
 #   1. One-shot container (if you can run Docker elsewhere):
 #        docker run -p 6379:6379 -p 3000:3000 --rm falkordb/falkordb:latest
 #   2. FalkorDB Cloud: https://app.falkordb.cloud
@@ -37,19 +53,78 @@ services:
     image: postgres:16
     container_name: athena-postgres
     environment:
-      POSTGRES_DB: athena
-      POSTGRES_USER: athena
-      POSTGRES_PASSWORD: athena
+      POSTGRES_DB: ${POSTGRES_DB:-athena}
+      POSTGRES_USER: ${POSTGRES_USER:-athena}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-athena}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U athena"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-athena}"]
       interval: 5s
       timeout: 3s
       retries: 10
+
+  # One-shot: applies the case-memory schema, then exits. `api` waits for
+  # this to *succeed*, not just start — see `condition:
+  # service_completed_successfully` below. Runs the same image as `api`
+  # so the migration environment can never drift from what the API runs.
+  migrate:
+    build: .
+    container_name: athena-migrate
+    environment:
+      ATHENA_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-athena}:${POSTGRES_PASSWORD:-athena}@postgres:5432/${POSTGRES_DB:-athena}
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  # REST API (src/secondlook/api/, issue #59). Fails fast on startup if
+  # ATHENA_API_KEY isn't set — see auth.py; that's intentional, not a bug
+  # in this compose file.
+  api:
+    build: .
+    container_name: athena-api
+    environment:
+      ATHENA_API_HOST: 0.0.0.0
+      ATHENA_API_KEY: ${ATHENA_API_KEY:?ATHENA_API_KEY must be set — copy .env.example to .env and generate one}
+      ATHENA_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-athena}:${POSTGRES_PASSWORD:-athena}@postgres:5432/${POSTGRES_DB:-athena}
+      FALKORDB_HOST: falkordb
+      FALKORDB_PORT: 6379
+      ATHENA_LLM_ENABLED: ${ATHENA_LLM_ENABLED:-true}
+      ATHENA_LLM_PROVIDER: ${ATHENA_LLM_PROVIDER:-anthropic}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ATHENA_LLM_MODEL: ${ATHENA_LLM_MODEL:-}
+      ATHENA_LLM_BASE_URL: ${ATHENA_LLM_BASE_URL:-}
+      ATHENA_LLM_API_KEY: ${ATHENA_LLM_API_KEY:-}
+    ports:
+      - "8000:8000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      falkordb:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Subsystem M — the low-bandwidth React frontend, built and served as a
+  # static bundle by nginx (see web/Dockerfile, web/nginx.conf). Talks to
+  # `api` from the BROWSER, not container-to-container — so
+  # VITE_API_BASE must be a URL the browser can reach (localhost:8000 by
+  # default), not the `api` service's internal Docker DNS name.
+  web:
+    build:
+      context: ./web
+      args:
+        VITE_API_BASE: ${VITE_API_BASE:-http://localhost:8000}
+    container_name: athena-web
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+    restart: unless-stopped
 
 volumes:
   falkordb_data:
