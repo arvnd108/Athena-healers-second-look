@@ -142,6 +142,42 @@ So the gap is real and is not being papered over. The prerequisite is a
 validated core and a designed answer to how provenance survives 160 characters —
 not more engineering on the client.
 
+## What this budget does not yet cover
+
+Issue #14 carries a later comment (`RESEARCH_DIRECTION.md` Part III), marked
+**external and non-binding**, which states three further budgets. They are not
+acceptance criteria for this issue, and none of them is measured or enforced
+today. They are recorded here rather than left implicit, because a document
+called "performance budget" that silently covers only bytes invites the reading
+that bytes were the whole problem.
+
+**1. CPU and parse time — a decade-old desktop on hospital Wi-Fi.** That target
+is a *processor* constraint, not a bandwidth one, and the two do not track each
+other: 62 KB of gzipped JavaScript is 196 KB to parse, compile and execute, and
+on a 2014 desktop that cost is not proportional to transfer time. Bytes are
+budgeted and enforced above. Parse-and-execute is neither. Measuring it honestly
+needs a real device or a pinned CPU-throttled trace, not an estimate.
+
+**2. Change-review latency — "seconds on LAN, zero external calls".** The claim
+is that the diff is deterministic local compute with no LLM between append and
+display, and that synthesis prose is optional garnish rather than load-bearing.
+That is a property of the pipeline, and it is not asserted anywhere: no test
+fails if an external call enters the change-review path, and no timing is
+recorded.
+
+**3. Degraded operation.** The stated bar is that with the internet down, the
+case record, diffs and curated KBs still render, and only live external lookups
+degrade — **with visible labels**. Those labels do not exist in the client
+today; there is no degrade state, and no test covers internet-down rendering.
+This is the gap with the most direct clinical consequence of the three: a panel
+that is empty because a lookup failed, rendered identically to one that is empty
+because nothing matched, is the "silent blank panel" the same comment calls a
+defect.
+
+None of this blocks #14 as written. It is the next thing to budget, and the
+order above is the order I would do it in — degraded operation first, because it
+is the only one where the failure is invisible to the person reading the screen.
+
 ## Re-measuring
 
 ```bash
