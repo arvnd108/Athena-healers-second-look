@@ -58,10 +58,14 @@ Examples relevant to Athena's actual architecture:
   privacy one).
 - Dependency vulnerabilities in packages this project pulls in (see
   `pyproject.toml`).
-- Authentication/authorization gaps in the API + MCP interface layer,
-  once implemented — in particular, any path by which a read-only MCP
-  tool could be used to write clinical decisions, which the project's
-  own design explicitly forbids.
+- Authentication/authorization in the API + MCP interface layer. REST
+  write routes require `ATHENA_API_KEY`; MCP requires
+  `ATHENA_MCP_API_KEY` only when bound beyond loopback
+  (`--allow-remote`). Remaining gaps: loopback MCP and stdio are
+  unauthenticated by design; there is no token rotation, expiry, or
+  per-tool authorization; a read-only MCP tool must still not be usable
+  to write clinical decisions (enforced by the `ReadOnlyCaseView` type
+  boundary, not the transport-layer gate).
 
 ## What is out of scope
 
