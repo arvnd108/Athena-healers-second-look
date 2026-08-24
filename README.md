@@ -326,3 +326,13 @@ ISSUES.md                Every known problem and its candidate fix
 **Never state a medical fact that was not retrieved or computed in a traceable
 step.** Every claim carries its citation or its method. No exceptions — this is
 what separates Athena from a chatbot that sounds confident.
+
+---
+
+## License
+
+Athena is licensed under **AGPL-3.0** — free to use, run, and modify for
+everyone, including large hospitals, as long as you keep your changes
+open. A separate commercial license is available for organizations that
+need different terms. See [`LICENSE.md`](LICENSE.md) for the plain-language
+explanation and [`LICENSE`](LICENSE) for the full legal text.

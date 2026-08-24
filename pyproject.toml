@@ -3,6 +3,10 @@ name = "athena-secondlook"
 version = "1.0.0"
 description = "Athena / SecondLook — AI second-opinion copilot for rare and treatment-exhausted cancers"
 requires-python = ">=3.11"
+license = {file = "LICENSE"}
+classifiers = [
+    "License :: OSI Approved :: GNU Affero General Public License v3",
+]
 dependencies = [
     # Tier 2 — structural prediction
     "hgvs>=1.5",
