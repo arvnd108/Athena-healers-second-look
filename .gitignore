@@ -28,3 +28,9 @@ validation/cache/
 
 # Local Claude Code worktrees -- never part of a change.
 .claude/
+
+# Real secrets for docker-compose.yml (ATHENA_API_KEY, ANTHROPIC_API_KEY,
+# ...). .env.example is the checked-in template; this is never committed.
+.env
+.env.*
+!.env.example

@@ -57,6 +57,18 @@ jobs:
       - name: Format check (black)
         run: black --check .
 
+      - name: Validate docker-compose.yml
+        run: |
+          cp .env.example .env
+          sed -i 's/^ATHENA_API_KEY=.*/ATHENA_API_KEY=ci-validation-only/' .env
+          docker compose config --quiet
+          rm .env
+        # Fast, no image builds -- catches YAML syntax errors and bad
+        # ${VAR} interpolation (e.g. a typo'd env var name in
+        # docker-compose.yml that .env.example doesn't define) without the
+        # multi-minute cost of actually building the api/web images in CI.
+        # Subsystem O (Open-Source Deployment & Cost Architecture).
+
   client:
     name: Subsystem M client (Node 20)
     runs-on: ubuntu-latest
