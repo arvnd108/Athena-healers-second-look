@@ -110,6 +110,35 @@ granularity.
 Annotations were read by hand against the source text. They were **not** taken
 from extractor output, and were fixed before the extractor was run against them.
 
+### The annotations have not been clinically reviewed
+
+C1's whole premise is that "the predicate type a careful human reader says it
+is" is the ground truth. That makes the reader part of the instrument, and this
+corpus's reader **is not a clinician**.
+
+The distinction matters because several judgement calls in here are genuinely
+arguable and were made by one person with no oncology training:
+
+- `Known distant metastases` is annotated `UNPARSEABLE` rather than
+  `DISEASE_STAGE_REQUIRES`, on the rule that a stage is only recorded when the
+  source names one. A clinician might reasonably read metastatic status *as* a
+  stage constraint, and 70% recall thresholds move on decisions like that.
+- Lines requiring a washout from a named agent are annotated
+  `PRIOR_THERAPY_EXCLUDES` even when they sit in an inclusion section, because
+  it is the only prior-therapy type in the schema.
+- `Palliative radiotherapy within 2 weeks of study entry` is annotated as prior
+  therapy, treating a modality as an agent.
+
+None of these is obviously wrong. None is obviously right either, and the
+corpus silently inherits whichever way they went.
+
+**Before these figures are presented as validation to anyone outside the team,
+a clinical reviewer should spot-check a sample of the annotations.** A
+disagreement rate from that check is worth more than another twenty fixtures
+annotated the same way, because it measures the instrument rather than the
+thing being instrumented. Until that happens, C1 through C4 evidence that the
+extractor agrees with *this* corpus — not that either is clinically correct.
+
 ## Measured results
 
 First run against the expanded corpus, before any fix:
