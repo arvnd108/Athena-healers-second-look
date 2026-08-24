@@ -2,7 +2,7 @@
 
 import pytest
 
-from secondlook.binding import BINDING_UNAVAILABLE_MESSAGE, BindingScore
+from secondlook.binding import BindingScore
 from secondlook.candidates import ZERO_CANDIDATES_MESSAGE
 from secondlook.graph import PIPELINE_VERSION
 from secondlook.mutation_validation import OUT_OF_SCOPE_MESSAGE, ProteinSequence
@@ -300,7 +300,11 @@ def test_binding_failure_uses_the_binding_message_not_the_plddt_one():
     out = _run(pdb_client=FakePdbApo(), mcsm_client=FailingMcsm(), vina_client=FailingVina())
     assert out.results == []
     assert len(out.failures) == 1
-    assert out.failures[0].reason == BINDING_UNAVAILABLE_MESSAGE
+    # The property under test is that a good structure is not blamed -- not the
+    # exact wording, which is now specific to the failure kind rather than one
+    # generic sentence for all six.
+    assert "AlphaMissense functional score" in out.failures[0].reason
+    assert "docking failed" in out.failures[0].reason
     # The structure itself was fine; only binding scoring came up empty.
     assert "pLDDT" not in out.failures[0].reason
 
