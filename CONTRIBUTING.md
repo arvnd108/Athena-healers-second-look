@@ -11,6 +11,14 @@ tooling.
 (patient data, PHI/PII). It is not optional reading — it governs what you
 may and may not put in an issue, PR, commit, or test fixture.**
 
+## Licensing
+
+Athena is licensed under AGPL-3.0 — see `LICENSE.md` for what that means
+in plain language and `LICENSE` for the full text. By submitting a
+contribution, you agree it's licensed under the same terms as the rest of
+the project (AGPL-3.0). There's no separate contributor license agreement
+to sign.
+
 ## Before you start
 
 1. Read `README.md` for setup and `ARCHITECTURE.md` for where the

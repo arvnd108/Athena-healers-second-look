@@ -23,6 +23,10 @@ def get_session() -> Iterator[Session]:
     session = Session(engine)
     try:
         yield session
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
     finally:
         session.close()
 
@@ -46,11 +50,15 @@ def get_existing_finding(finding_id: uuid.UUID, store: CaseStore = Depends(get_s
 
 
 def get_graph():
-    return None
+    from secondlook.tier1.graph_connection import connect_graph
+
+    return connect_graph()
 
 
 def get_llm_client():
-    return None
+    from secondlook.synthesis.llm_client import get_llm_client as _get_llm_client
+
+    return _get_llm_client()
 
 
 def get_dispatch():
