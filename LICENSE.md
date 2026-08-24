@@ -1,49 +1,85 @@
-This repository does not yet have a finalized open-source license.
+# License
 
-**Status: unlicensed pending a maintainer decision.**
+Athena is licensed under the **GNU Affero General Public License v3.0
+(AGPL-3.0)**. The full, unmodified license text is in [`LICENSE`](LICENSE)
+in this repository — that file is the actual legal document; this page is
+a plain-language explanation of what it means and why we chose it.
 
-Until a `LICENSE` file with a specific, approved license text is added to
-this repository, the default legal position applies: all rights to the
-original code and documentation in this repository are reserved by their
-authors, and no license to use, copy, modify, or distribute this work is
-granted, notwithstanding the repository being publicly visible on GitHub.
+## The short version
 
-## Why this file exists instead of a license
+**Athena is free — for everyone, including large hospitals — as long as
+you keep it open.** If you run it, modify it, or offer it as a service to
+others, AGPL asks one thing in return: share your source code, including
+any changes you made, under the same license. That's it. There is no
+payment obligation anywhere in AGPL-3.0, for anyone, regardless of size or
+revenue.
 
-Athena's own documentation (`docs/README.md`) states that it extends
-RareCure, described there as "an open-source, MIT-licensed pipeline."
-That points toward MIT as a natural, compatible
-choice for Athena's own license, for consistency with the project it
-builds on and with the open-source principles stated in the project's
-design documents (open data sources only, self-hostable, no proprietary
-data licenses).
+We also offer a **separate commercial license** for organizations that
+would rather not share their modifications publicly — for example, a
+company building a proprietary product on top of Athena that they don't
+want to open-source. That's an *alternative to* AGPL's sharing
+requirement, not a fee AGPL itself imposes. Choosing not to open-source
+your changes is where a commercial conversation with us becomes relevant.
 
-That said, choosing and applying a license is a legal decision for the
-project's maintainers/copyright holders to make deliberately — not
-something to default into silently. This placeholder exists so that:
+## What this means depending on who you are
 
-- Contributors and users are not misled into thinking a license has been
-  chosen when it hasn't.
-- The intended direction (MIT, for RareCure-compatibility) is recorded
-  for whoever makes the final call.
-- No specific license text is asserted without maintainer sign-off, since
-  an incorrect or premature LICENSE file is harder to walk back than an
-  honest "not yet."
+**NGOs and small/district hospitals** — Use Athena exactly as it is,
+modify it for your context, run it for your patients. You owe nothing.
+This was the whole point of building it.
 
-## What maintainers need to do
+**Large hospital networks or health systems** — You can also use, run,
+and even modify Athena for free under AGPL, the same as anyone else,
+as long as you're willing to share your modifications back under the
+same license if you deploy them. Nothing about being large or
+well-resourced changes your rights or obligations under AGPL — it's the
+same license for everyone.
 
-1. Confirm the license (MIT is the working recommendation; Apache 2.0 is
-   a reasonable alternative if an explicit patent grant is wanted).
-2. Confirm the copyright holder name to put in the license header
-   (an individual, or the `healers-second-look` organization).
-3. Replace this file with a proper `LICENSE` (no extension, plain text)
-   containing the chosen license's exact, unmodified text.
-4. Update `pyproject.toml`'s `[project]` table to add a `license` field
-   matching the chosen license, and add a short "License" section to
-   `README.md` linking to it.
-5. Remove this file once `LICENSE` exists.
+**Companies or organizations that want to keep their changes private** —
+If you're building something on top of Athena that you don't want to
+open-source (a proprietary product, a closed internal fork you don't
+intend to share), AGPL doesn't allow that without a separate agreement.
+That's what our commercial license is for. This is also, honestly, how we
+intend to fund ongoing maintenance of the project — not by charging
+people for using open software, but by giving organizations that want
+different terms a legitimate way to support the work instead of an
+outright "no."
 
-## In the meantime
+**Contributors and developers** — Anything you contribute is licensed
+under AGPL-3.0 along with the rest of the project, per `CONTRIBUTING.md`.
 
-Anyone who wants to use, modify, or redistribute this code beyond simply
-viewing it on GitHub should contact the maintainers to clarify terms.
+## We mean this: if you're confused, just ask
+
+Licensing text is genuinely confusing, and we'd rather have an honest
+conversation with you than have you guess wrong or avoid using something
+that could help patients because the legal wording was unclear. If you're
+not sure which situation you're in, whether your use case needs a
+commercial license, or anything else about this — open an issue, or reach
+out to the maintainers directly. We are not trying to catch anyone out or
+find a reason to bill you. This project exists to help hospitals that
+usually get left out of well-funded tooling, and the license is built
+around that goal, not the other way around.
+
+## Commercial licensing
+
+For organizations that need terms outside of AGPL-3.0 (proprietary
+modifications, deployment without the source-sharing requirement, or
+anything else that doesn't fit the open license), contact the
+[`healers-second-look`](https://github.com/healers-second-look)
+maintainers to discuss terms. There's no fixed price list here — every
+organization's situation is different, and we'd rather talk it through
+than force a one-size-fits-all number on a hospital or NGO that might not
+fit the mold.
+
+## For maintainers — what's left to finish
+
+- [x] License chosen: AGPL-3.0, with a commercial-licensing option
+- [x] `LICENSE` added with the exact, unmodified AGPL-3.0 text
+- [ ] Confirm the copyright holder name for source-file headers (an
+      individual, or the `healers-second-look` organization)
+- [ ] Set up an actual contact channel for commercial-licensing inquiries
+      (an email address or a dedicated issue template) — this file
+      currently points to the GitHub org, which works but isn't ideal for
+      anything requiring privacy
+- [ ] Decide whether new source files should carry a short AGPL header
+      comment (common for GPL-family licenses, not required by the
+      license itself)
