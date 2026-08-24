@@ -1,5 +1,5 @@
-"""Automated Case Intake tests. Pure, offline -- runs entirely against
-`StubExtractionBackend`, never a live model.
+"""Automated Case Intake tests. Pure, offline -- `StubExtractionBackend`
+or an injected fake `LLMClient`, never a live model.
 """
 
 from __future__ import annotations
@@ -13,6 +13,7 @@ from secondlook.case.models import EVENT_TYPES
 from secondlook.intake.extraction import (
     LOW_CONFIDENCE_THRESHOLD,
     ClaudeExtractionBackend,
+    ExtractionParseError,
     StubExtractionBackend,
     extract_case_events,
 )
@@ -23,6 +24,7 @@ from secondlook.intake.models import (
     ProposedCaseEvent,
     UploadedDocument,
 )
+from secondlook.synthesis.llm_client import LLMClientError
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
@@ -198,27 +200,96 @@ def test_raw_document_text_never_appears_in_proposed_events():
     assert secret_marker not in str(result)
 
 
-# --- ClaudeExtractionBackend: exists, documented, deliberately unverified --
+# --- ClaudeExtractionBackend: real parser, injected fake LLMClient ----------
+
+
+class _FakeLLM:
+    def __init__(self, text: str):
+        self.text = text
+        self.calls: list[tuple[str, str | None]] = []
+
+    def complete(self, prompt: str, *, system: str | None = None) -> str:
+        self.calls.append((prompt, system))
+        return self.text
+
+
+_WELL_FORMED = (
+    '[{"event_type": "ALTERATION_OBSERVED", '
+    '"fields": {"gene": {"value": "EGFR", "confidence": 0.95}, '
+    '"variant": {"value": "T790M", "confidence": 0.9}}, '
+    '"occurred_at": "2026-02-14"}]'
+)
 
 
 def test_claude_backend_can_be_constructed():
-    ClaudeExtractionBackend()  # must not raise merely by instantiating
+    """Must not raise merely by instantiating — no SDK import, no network."""
+    ClaudeExtractionBackend()
 
 
-def test_claude_backend_raises_not_implemented_when_actually_called():
-    """This is load-bearing, not an oversight: the class must not silently
-    pretend to work. See its docstring for what's required before this
-    changes.
-    """
-    backend = ClaudeExtractionBackend()
-    with pytest.raises(NotImplementedError, match="documented skeleton"):
-        backend.extract("some text", "sequencing")
-
-
-def test_claude_backend_rejects_unknown_document_type_before_reaching_the_unimplemented_call():
-    backend = ClaudeExtractionBackend()
+def test_claude_backend_rejects_unknown_document_type_before_any_llm_call():
+    fake = _FakeLLM(_WELL_FORMED)
+    backend = ClaudeExtractionBackend(llm_client=fake)
     with pytest.raises(ValueError, match="No prompt defined"):
         backend.extract("some text", "xray")
+    assert fake.calls == []
+
+
+def test_claude_backend_parses_well_formed_json_into_candidates():
+    backend = ClaudeExtractionBackend(llm_client=_FakeLLM(_WELL_FORMED))
+    result = backend.extract("synthetic NGS report", "sequencing")
+    assert len(result) == 1
+    assert result[0].event_type == "ALTERATION_OBSERVED"
+    assert result[0].occurred_at == "2026-02-14"
+    assert result[0].fields["gene"].value == "EGFR"
+    assert result[0].fields["gene"].confidence == 0.95
+    assert result[0].fields["variant"].value == "T790M"
+    assert result[0].fields["variant"].confidence == 0.9
+
+
+def test_claude_backend_strips_markdown_json_fence():
+    fenced = "```json\n" + _WELL_FORMED + "\n```"
+    backend = ClaudeExtractionBackend(llm_client=_FakeLLM(fenced))
+    result = backend.extract("synthetic NGS report", "sequencing")
+    assert result[0].fields["gene"].value == "EGFR"
+
+
+def test_claude_backend_malformed_json_raises_extraction_parse_error():
+    backend = ClaudeExtractionBackend(llm_client=_FakeLLM("not json at all"))
+    with pytest.raises(ExtractionParseError, match="not JSON"):
+        backend.extract("synthetic NGS report", "sequencing")
+
+
+def test_claude_backend_missing_required_key_raises_extraction_parse_error():
+    backend = ClaudeExtractionBackend(
+        llm_client=_FakeLLM('[{"fields": {"gene": {"value": "EGFR", "confidence": 1.0}}}]')
+    )
+    with pytest.raises(ExtractionParseError, match="required key"):
+        backend.extract("synthetic NGS report", "sequencing")
+
+
+def test_claude_backend_out_of_range_confidence_propagates_value_error():
+    payload = (
+        '[{"event_type": "ALTERATION_OBSERVED", '
+        '"fields": {"gene": {"value": "EGFR", "confidence": 1.5}}}]'
+    )
+    backend = ClaudeExtractionBackend(llm_client=_FakeLLM(payload))
+    with pytest.raises(ValueError, match="confidence must be in"):
+        backend.extract("synthetic NGS report", "sequencing")
+
+
+def test_claude_backend_empty_array_produces_zero_candidates():
+    backend = ClaudeExtractionBackend(llm_client=_FakeLLM("[]"))
+    assert backend.extract("synthetic NGS report", "sequencing") == []
+
+
+def test_claude_backend_llm_client_error_propagates_uncaught():
+    class Boom:
+        def complete(self, prompt: str, *, system: str | None = None) -> str:
+            raise LLMClientError("transport failed")
+
+    backend = ClaudeExtractionBackend(llm_client=Boom())
+    with pytest.raises(LLMClientError, match="transport failed"):
+        backend.extract("synthetic NGS report", "sequencing")
 
 
 # --- eval fixture set: shape validation + demonstration of the harness pattern --
@@ -257,7 +328,8 @@ def test_eval_set_demonstrates_the_harness_pattern_against_the_stub():
     since the stub is seeded with the answer rather than actually reading
     `document_text`. Real accuracy measurement requires
     ClaudeExtractionBackend (or an equivalent working backend) and
-    subsystem P's harness, neither of which exist yet.
+    the intake adapter in `harness/adapters/intake.py`. This test still
+    only proves fixture shape, not live-model accuracy.
     """
     data = _load_eval_set()
     for case in data["cases"]:
