@@ -1,0 +1,33 @@
+{
+  "registry_id": "NCT04383119",
+  "source": "ClinicalTrials.gov v2",
+  "note": "Real registry text, fetched from the ClinicalTrials.gov v2 API. Annotations were read by hand against the source, not taken from extractor output. criteria_text is the complete eligibility section so C3 sees every line; the annotated lines are a seeded random sample (see docs/trial-extraction-validation-plan.md, Corpus).",
+  "criteria_text": "Inclusion Criteria:\n\n1. Patients with histologically documented diagnosis of leiomyosarcoma\n2. Patients with diagnosis of unresectable or metastatic leiomyosarcoma\n3. Patients who received at least on previous systemic treatment with anthracycline-based chemotherapy.\n4. Patients suitable to receive gemcitabine or trabectedin therapy.\n5. Measurable or evaluable disease with RECIST 1.1 criteria.\n6. Evidence of progression according RECIST 1.1 during the 6 months before study entry.\n7. Age ≥18 years\n8. Eastern Cooperative Oncology Group (ECOG) Performance Status ≤ 2\n9. All previous anticancer treatments must have completed ≥ 3 weeks prior to first dose of study drug.\n10. The patient has resolution of adverse events, with the exception of alopecia, and of all clinically significant toxic effects of prior loco-regional therapy, surgery, radiotherapy or systemic anticancer therapy to ≤ Grade 1, by National Cancer Institute - Common Terminology Criteria for Adverse Events (NCI-CTCAE) Version 5.0\n11. Adequate bone marrow, liver and renal function\n12. Left Ventricular Ejection Fraction ≥ 50% and/or above lower institutional limit of normality.\n13. Female patients of child-bearing potential must have negative pregnancy test within 7 days before initiation each cycle of chemotherapy.\n14. No history of arterial and/or venous thromboembolic event within the previous 12 months.\n15. The patient or legal representative must be able to read and understand the informed consent form and must have been willing to give written informed consent prior to any study specific procedure. The subject may also provide an optional consent for the biological/translational sub-study associated.\n\nExclusion Criteria:\n\n1. Prior treatment with Trabectedin and/or Gemcitabine\n2. Known hypersensitivity to any of the study drugs, study drug classes, or excipients in the formulation of the study drugs\n3. History of other malignancies (except basal cell carcinoma or cervical carcinoma in situ, adequately treated), unless in remission from 5 years or more and judged of negligible potential of relapse.\n4. Persistent toxicities with the exception of alopecia, caused by previous anticancer therapies\n5. Metastatic brain or meningeal tumors\n6. Active viral hepatitis\n7. Immunocompromised patients, e.g., patients who are known to be serologically positive for human immunodeficiency virus\n8. Patients with any severe and/or uncontrolled medical conditions\n9. Medical history of hemorrhage or a bleeding event ≥ Grade 3 (NCI-CTCAE v 5.0) within 4 weeks prior to the initiation of study treatment\n10. Active clinically serious infections\n11. Immunocompromised patients, e.g., patients who are known to be serologically positive for human immunodeficiency virus\n12. Previous treatment with radiation therapy within 14 days of first day of study drug dosing,\n13. Major surgery within 4 weeks prior to study entry\n14. Concomitant use of known strong CYP3A inhibitors or moderate CYP3A inhibitors\n15. Concomitant use of known strong or moderate CYP3A inducers\n16. Patients undergoing renal dialysis or with Creatinin Clearance \\<30 ml/min or Creatinine \\>1,5 mg/dL\n17. Pregnant or breast feeding patients\n18. Patients with severe and/or uncontrolled concurrent medical disease that in the opinion of the investigator could cause unacceptable safety risks or compromise compliance with the protocol",
+  "annotations": [
+    {
+      "line": "Patients with diagnosis of unresectable or metastatic leiomyosarcoma",
+      "type": "UNPARSEABLE",
+      "section": "inclusion"
+    },
+    {
+      "line": "Eastern Cooperative Oncology Group (ECOG) Performance Status ≤ 2",
+      "type": "ECOG_MAX",
+      "section": "inclusion"
+    },
+    {
+      "line": "No history of arterial and/or venous thromboembolic event within the previous 12 months.",
+      "type": "UNPARSEABLE",
+      "section": "inclusion"
+    },
+    {
+      "line": "Active clinically serious infections",
+      "type": "UNPARSEABLE",
+      "section": "exclusion"
+    },
+    {
+      "line": "Patients with severe and/or uncontrolled concurrent medical disease that in the opinion of the investigator could cause unacceptable safety risks or compromise compliance with the protocol",
+      "type": "UNPARSEABLE",
+      "section": "exclusion"
+    }
+  ]
+}

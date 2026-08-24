@@ -1,0 +1,23 @@
+{
+  "registry_id": "NCT00003801",
+  "source": "ClinicalTrials.gov v2",
+  "note": "Real registry text, fetched from the ClinicalTrials.gov v2 API. Annotations were read by hand against the source, not taken from extractor output. criteria_text is the complete eligibility section so C3 sees every line; the annotated lines are a seeded random sample (see docs/trial-extraction-validation-plan.md, Corpus).",
+  "criteria_text": "DISEASE CHARACTERISTICS: Prior registration on Intergroup Rhabdomyosarcoma Study Group Study IRS-I, IRS-II, IRS-III, IRS-IV pilot, IRS-V, or IRS-V pilot, or one of the protocols of IRS-V (D9501, D9502, D9602) AND Survived for 5 years after diagnosis (may be deceased now)\n\nPATIENT CHARACTERISTICS: Age: 5 and over Performance status: Not specified Life expectancy: Not specified Hematopoietic: Not specified Hepatic: Not specified Renal: Not specified\n\nPRIOR CONCURRENT THERAPY: See Disease Characteristics",
+  "annotations": [
+    {
+      "line": "DISEASE CHARACTERISTICS: Prior registration on Intergroup Rhabdomyosarcoma Study Group Study IRS-I, IRS-II, IRS-III, IRS-IV pilot, IRS-V, or IRS-V pilot, or one of the protocols of IRS-V (D9501, D9502, D9602) AND Survived for 5 years after diagnosis (may be deceased now)",
+      "type": "UNPARSEABLE",
+      "section": "unknown"
+    },
+    {
+      "line": "PATIENT CHARACTERISTICS: Age: 5 and over Performance status: Not specified Life expectancy: Not specified Hematopoietic: Not specified Hepatic: Not specified Renal: Not specified",
+      "type": "AGE_RANGE",
+      "section": "unknown"
+    },
+    {
+      "line": "PRIOR CONCURRENT THERAPY: See Disease Characteristics",
+      "type": "UNPARSEABLE",
+      "section": "unknown"
+    }
+  ]
+}

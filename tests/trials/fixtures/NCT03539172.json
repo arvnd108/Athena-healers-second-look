@@ -1,0 +1,33 @@
+{
+  "registry_id": "NCT03539172",
+  "source": "ClinicalTrials.gov v2",
+  "note": "Real registry text, fetched from the ClinicalTrials.gov v2 API. Annotations were read by hand against the source, not taken from extractor output. criteria_text is the complete eligibility section so C3 sees every line; the annotated lines are a seeded random sample (see docs/trial-extraction-validation-plan.md, Corpus).",
+  "criteria_text": "Inclusion Criteria:\n\n1. Histologic diagnosis of head and neck soft tissue sarcoma (undifferentiated pleomorphic sarcoma, synovial sarcoma, alveolar soft part sarcoma, clear cell sarcoma, angiosarcoma, epithelioid hemangiosarcoma, solitary fibrous tumor and epithelioid sarcomas) or bone sarcoma (osteosarcoma/high grade bone sarcoma, Ewing sarcoma or dedifferentiated chondrosarcoma) confirmed by central pathology review.\n2. Gross total resection, with Invasive cancer seen on microscopic evaluation of the resection margin, or with gross tumor residual, or surgically unresectable and/or refuse surgery.\n3. Eastern Cooperative Oncology Group (ECOG) Performance Status of 0-1\n4. Adequate hepatic, renal, cardiac, and hematologic function.\n5. Patients must provide written informed consent prior to performance of study-specific procedures and must be willing to comply with treatment and follow-up.\n\nExclusion Criteria:\n\n1. Evidence of distant metastasis\n2. Prior chemotherapy or anti-cancer biologic therapy for any type of cancer, or prior radiotherapy to the head and neck region\n3. Other previous cancer, except for in situ cervical cancer and cutaneous basal cell carcinoma\n4. Pregnant or breast-feeding females, or females and males of childbearing potential not taking adequate contraceptive measures\n5. Presence of an uncontrolled concomitant illness including, but not limited to, ongoing or active infection, symptomatic congestive heart failure, unstable angina pectoris, or cardiac arrhythmia\n6. Suffered from grade II or above myocardial ischemia or myocardial infarction, uncontrolled arrhythmias (including QT interval male ≥ 450 ms, female ≥ 470 ms). Grade III-IV cardiac insufficiency according to New York Heart Association (NYHA) criteria or echocardiography check: left ventricular ejection fraction (LVEF)\\<50%\n7. Patients who have had prior allergic reaction to Apatinib",
+  "annotations": [
+    {
+      "line": "Histologic diagnosis of head and neck soft tissue sarcoma (undifferentiated pleomorphic sarcoma, synovial sarcoma, alveolar soft part sarcoma, clear cell sarcoma, angiosarcoma, epithelioid hemangiosarcoma, solitary fibrous tumor and epithelioid sarcomas) or bone sarcoma (osteosarcoma/high grade bone sarcoma, Ewing sarcoma or dedifferentiated chondrosarcoma) confirmed by central pathology review.",
+      "type": "UNPARSEABLE",
+      "section": "inclusion"
+    },
+    {
+      "line": "Adequate hepatic, renal, cardiac, and hematologic function.",
+      "type": "UNPARSEABLE",
+      "section": "inclusion"
+    },
+    {
+      "line": "Pregnant or breast-feeding females, or females and males of childbearing potential not taking adequate contraceptive measures",
+      "type": "UNPARSEABLE",
+      "section": "exclusion"
+    },
+    {
+      "line": "Suffered from grade II or above myocardial ischemia or myocardial infarction, uncontrolled arrhythmias (including QT interval male ≥ 450 ms, female ≥ 470 ms). Grade III-IV cardiac insufficiency according to New York Heart Association (NYHA) criteria or echocardiography check: left ventricular ejection fraction (LVEF)<50%",
+      "type": "UNPARSEABLE",
+      "section": "exclusion"
+    },
+    {
+      "line": "Patients who have had prior allergic reaction to Apatinib",
+      "type": "UNPARSEABLE",
+      "section": "exclusion"
+    }
+  ]
+}
