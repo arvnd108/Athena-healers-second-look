@@ -1,10 +1,8 @@
 """Tests for chat plugins, skills, and modes (Phase 3)."""
 
 from secondlook.chat.plugins import (
-    ATTACHMENTS,
     Turn,
     apply_attachments,
-    get_attachment,
     list_attachments,
     unknown_ids,
 )

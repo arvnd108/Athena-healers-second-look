@@ -151,9 +151,7 @@ def _anthropic_available() -> tuple[bool, str | None]:
 
 def _openai_compatible_available() -> tuple[bool, str | None]:
     missing = [
-        name
-        for name in ("ATHENA_LLM_BASE_URL", "ATHENA_LLM_MODEL")
-        if not os.environ.get(name)
+        name for name in ("ATHENA_LLM_BASE_URL", "ATHENA_LLM_MODEL") if not os.environ.get(name)
     ]
     if missing:
         return False, f"{' and '.join(missing)} not set in this deployment."

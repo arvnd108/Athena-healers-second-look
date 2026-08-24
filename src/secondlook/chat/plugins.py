@@ -37,15 +37,61 @@ _NAMED_VARIANT = re.compile(
 _NOT_GENES = frozenset(
     {
         # English that happens to fit the gene shape.
-        "AND", "THE", "FOR", "WITH", "NOT", "ANY", "ALL", "CAN", "HAS", "WAS",
-        "ARE", "BUT", "HOW", "WHY", "WHO", "DOES", "WHAT", "WHICH",
+        "AND",
+        "THE",
+        "FOR",
+        "WITH",
+        "NOT",
+        "ANY",
+        "ALL",
+        "CAN",
+        "HAS",
+        "WAS",
+        "ARE",
+        "BUT",
+        "HOW",
+        "WHY",
+        "WHO",
+        "DOES",
+        "WHAT",
+        "WHICH",
         # Domain vocabulary that is emphatically not a gene.
-        "DNA", "RNA", "FDA", "NCI", "USA", "CIVIC", "PUBMED", "ATHENA", "KG",
-        "AI", "LLM", "API", "PET", "MRI", "IHC", "NGS", "TKI", "OS", "PFS",
+        "DNA",
+        "RNA",
+        "FDA",
+        "NCI",
+        "USA",
+        "CIVIC",
+        "PUBMED",
+        "ATHENA",
+        "KG",
+        "AI",
+        "LLM",
+        "API",
+        "PET",
+        "MRI",
+        "IHC",
+        "NGS",
+        "TKI",
+        "OS",
+        "PFS",
         # Cancer-type acronyms. Without these, "in NSCLC" reports a gene
         # called NSCLC -- confidently, and wrongly, on every lung question.
-        "NSCLC", "SCLC", "AML", "CML", "ALL", "CLL", "GIST", "TNBC", "HCC",
-        "CRC", "RCC", "HNSCC", "DLBCL", "MDS", "MM", "GBM",
+        "NSCLC",
+        "SCLC",
+        "AML",
+        "CML",
+        "CLL",
+        "GIST",
+        "TNBC",
+        "HCC",
+        "CRC",
+        "RCC",
+        "HNSCC",
+        "DLBCL",
+        "MDS",
+        "MM",
+        "GBM",
     }
 )
 
@@ -100,12 +146,12 @@ def _extract_entities(message: str) -> dict[str, list[str]]:
     would hand retrieval a nonexistent gene to query.
     """
     variants = list(dict.fromkeys(_PROTEIN_VARIANT.findall(message)))
-    named = [n.capitalize() for n in dict.fromkeys(m.lower() for m in _NAMED_VARIANT.findall(message))]
+    named = [
+        n.capitalize() for n in dict.fromkeys(m.lower() for m in _NAMED_VARIANT.findall(message))
+    ]
     claimed = set(variants)
     genes = [
-        g
-        for g in dict.fromkeys(_GENE.findall(message))
-        if g not in _NOT_GENES and g not in claimed
+        g for g in dict.fromkeys(_GENE.findall(message)) if g not in _NOT_GENES and g not in claimed
     ]
     out: dict[str, list[str]] = {}
     if genes:

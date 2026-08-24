@@ -1,11 +1,10 @@
 """Tests for chat model registry (Phase 2)."""
 
 import pytest
+
 from secondlook.chat.models import (
-    DEFAULT_MODEL_ID,
     MockOutlineClient,
     MockTerseClient,
-    ModelSpec,
     build_client,
     get_model_spec,
     list_models,
@@ -38,7 +37,7 @@ def test_get_model_spec():
 
 def test_mock_models_produce_visibly_different_output():
     prompt = "What are the resistance mutations for EGFR?"
-    
+
     outline_client = MockOutlineClient()
     terse_client = MockTerseClient()
 

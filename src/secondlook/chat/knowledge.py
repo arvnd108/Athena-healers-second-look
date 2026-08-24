@@ -31,7 +31,8 @@ MATCH (g:Gene {symbol: $symbol})-[:HAS_VARIANT]->(v:Variant)
 OPTIONAL MATCH (e:EvidenceItem)-[:SUPPORTS]->(v)
 OPTIONAL MATCH (v)-[:PREDICTS_RESPONSE_TO]->(d:Drug)
 OPTIONAL MATCH (v)-[:OBSERVED_IN]->(dis:Disease)
-RETURN coalesce(v.hgvs_p, v.name) AS variant, e.evidence_level AS level, d.name AS drug, dis.name AS disease
+RETURN coalesce(v.hgvs_p, v.name) AS variant, e.evidence_level AS level,
+       d.name AS drug, dis.name AS disease
 LIMIT $limit
 """
 
@@ -40,7 +41,8 @@ MATCH (v:Variant)-[:OBSERVED_IN]->(dis:Disease {name: $name})
 MATCH (g:Gene)-[:HAS_VARIANT]->(v)
 OPTIONAL MATCH (e:EvidenceItem)-[:SUPPORTS]->(v)
 OPTIONAL MATCH (v)-[:PREDICTS_RESPONSE_TO]->(dr:Drug)
-RETURN g.symbol AS gene, coalesce(v.hgvs_p, v.name) AS variant, dr.name AS drug, e.evidence_level AS level
+RETURN g.symbol AS gene, coalesce(v.hgvs_p, v.name) AS variant,
+       dr.name AS drug, e.evidence_level AS level
 LIMIT $limit
 """
 
@@ -229,7 +231,7 @@ RETURN a, r, b LIMIT $limit
             props = dict(getattr(node, "properties", {}) or {})
             labels = list(getattr(node, "labels", []) or [])
             node_type = labels[0] if labels else "Node"
-            
+
             # Smart label resolution
             label = (
                 props.get("symbol")
@@ -291,7 +293,7 @@ def retrieve_evidence_for_turn(
                 _EVIDENCE_BY_ENTITIES,
                 {"genes": genes, "variants": variants, "limit": limit},
             )
-        
+
         if not rows and context_id and context_id.startswith("gene:"):
             symbol = context_id.split(":", 1)[1]
             rows = _rows(handle, _EVIDENCE_FOR_CONTEXT, {"symbol": symbol, "limit": limit})
@@ -300,8 +302,10 @@ def retrieve_evidence_for_turn(
             gene, variant, drug, disease, level, summary, citation_url, civic_id = row
             pmid_match = re.search(r"pubmed/(\d+)", citation_url or "")
             pmid = pmid_match.group(1) if pmid_match else str(civic_id or i)
-            
-            title = f"{gene} {variant}" if gene and variant else (gene or variant or "Evidence Item")
+
+            title = (
+                f"{gene} {variant}" if gene and variant else (gene or variant or "Evidence Item")
+            )
             if drug:
                 title += f" → {drug}"
             if disease:

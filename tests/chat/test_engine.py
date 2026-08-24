@@ -1,7 +1,7 @@
 """Tests for session store, engine, and KG integration (Phases 1, 4)."""
 
 from secondlook.chat.engine import build_prompt, run_turn
-from secondlook.chat.knowledge import describe_context, list_contexts
+from secondlook.chat.knowledge import describe_context
 from secondlook.chat.session import (
     create_session,
     delete_session,
@@ -62,4 +62,4 @@ def test_describe_context_graceful_handling():
     lines = describe_context("gene:EGFR")
     assert isinstance(lines, list)
     if lines:
-        assert any("EGFR" in l or "UNAVAILABLE" in l for l in lines)
+        assert any("EGFR" in line or "UNAVAILABLE" in line for line in lines)

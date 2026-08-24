@@ -20,7 +20,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from secondlook.chat.engine import run_turn
-from secondlook.chat.knowledge import fetch_subgraph, list_contexts
+from secondlook.chat.knowledge import GraphUnavailable, fetch_subgraph, list_contexts
 from secondlook.chat.models import list_models
 from secondlook.chat.plugins import list_attachments
 from secondlook.chat.session import (
@@ -164,8 +164,8 @@ def get_context_graph(context_id: str):
     """Fetch nodes, edges, and Cypher query for `context_id` (Phase 5)."""
     try:
         return fetch_subgraph(context_id)
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Graph query failed: {exc}")
+    except GraphUnavailable as exc:
+        raise HTTPException(status_code=500, detail=f"Graph query failed: {exc}") from exc
 
 
 __all__ = ["router"]
