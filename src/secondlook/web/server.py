@@ -48,9 +48,15 @@ class Handler(BaseHTTPRequestHandler):
         # An error page is still a page: same shell, same stylesheet, and it
         # says what went wrong rather than rendering an empty view that
         # reads as "there is nothing here".
-        from secondlook.web.render import page
+        #
+        # `message` is PLAIN TEXT and is escaped here. The 404s below echo a
+        # path segment back to the caller, and `page()` composes markup rather
+        # than escaping it -- so echoing a segment unescaped would be reflected
+        # XSS (`/cases/<img src=x onerror=...>/brief`). Escaping at this single
+        # choke point means no later call site has to remember to.
+        from secondlook.web.render import _e, page
 
-        self._send(status, page("Not found — Athena", f"<h1>{status}</h1><p>{message}</p>"))
+        self._send(status, page("Not found — Athena", f"<h1>{_e(status)}</h1><p>{_e(message)}</p>"))
 
     def do_GET(self) -> None:  # noqa: N802 -- BaseHTTPRequestHandler's own casing
         data = load_all()
@@ -74,9 +80,9 @@ class Handler(BaseHTTPRequestHandler):
 
         self._error(
             404,
-            "Server-rendered routes are /cases/&lt;id&gt;/brief and "
-            "/findings/&lt;id&gt;. The dashboard and queue are client routes; "
-            "run the Vite dev server for those.",
+            "Server-rendered routes are /cases/<id>/brief and /findings/<id>. "
+            "The dashboard and queue are client routes; run the Vite dev server "
+            "for those.",
         )
 
     def log_message(self, fmt: str, *args) -> None:

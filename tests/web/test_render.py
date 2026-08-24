@@ -36,6 +36,14 @@ CONTEXTUAL = "f0000000-0000-4000-8000-000000000061"
 #: on the 400 ms link in the budget is a visible stall.
 SSR_GZIP_BUDGET_BYTES = 14_000
 
+#: Full URLs, not bare hostnames. A bare-hostname `in` check reads as URL
+#: sanitization to a scanner and, more importantly, is a weaker assertion:
+#: it passes on a citation rendered as inert text. Asserting the whole
+#: href value checks the thing SS9 actually requires -- a clickable link.
+TRIAL_CITATION = "https://clinicaltrials.gov/study/NCT03778229"
+CIVIC_CITATION = "https://civicdb.org/evidence/1409"
+PUBMED_CITATION = "https://pubmed.ncbi.nlm.nih.gov/25923549/"
+
 
 @pytest.fixture(scope="module")
 def data():
@@ -64,10 +72,10 @@ class TestComputedCardHasNoPlaceForACitation:
         finding = dict(data["findings"][TRIAL_ELIGIBILITY])
         finding["source"] = {
             **finding["source"],
-            "citation_url": "https://clinicaltrials.gov/study/NCT03778229",
+            "citation_url": TRIAL_CITATION,
         }
         html = render.render_card(finding)
-        assert "clinicaltrials.gov" not in html
+        assert TRIAL_CITATION not in html
         assert "href" not in html
 
     def test_computed_card_states_method_and_version(self, data):
@@ -87,7 +95,7 @@ class TestDocumentedCard:
 
     def test_citation_renders_clickable(self, data):
         html = render.render_card(data["findings"][TRIAL_EXISTS])
-        assert 'href="https://clinicaltrials.gov/study/NCT03778229"' in html
+        assert f'href="{TRIAL_CITATION}"' in html
         assert "card-documented" in html
 
     def test_a_documented_finding_with_no_citation_url_raises(self, data):
@@ -107,8 +115,9 @@ class TestTheTrialPairRendersSideBySide:
         assert "card-computed" in bucket and "card-documented" not in bucket
         # The documented half carries the registry link; the computed half
         # carries none at all. Same trial, two warrants, visibly different.
-        assert "clinicaltrials.gov" in exists
-        assert "clinicaltrials.gov" not in bucket
+        assert f'href="{TRIAL_CITATION}"' in exists
+        assert TRIAL_CITATION not in bucket
+        assert "href=" not in bucket
 
     def test_the_bucket_carries_its_pre_screen_caveat(self, data):
         html = render.render_card(data["findings"][TRIAL_ELIGIBILITY])
@@ -172,8 +181,8 @@ class TestFindingDetail:
         html = render.render_finding_detail(
             data["findings"]["f0000000-0000-4000-8000-000000000021"]
         )
-        assert "civicdb.org/evidence/1409" in html
-        assert "pubmed.ncbi.nlm.nih.gov" in html
+        assert f'href="{CIVIC_CITATION}"' in html
+        assert f'href="{PUBMED_CITATION}"' in html
 
     def test_review_buttons_work_without_javascript(self, data):
         html = render.render_finding_detail(data["findings"][TRIAL_EXISTS])
@@ -275,3 +284,35 @@ class TestFixtures:
 
         with pytest.raises(FileNotFoundError, match="not found"):
             _read("case.json", tmp_path)
+
+
+class TestDevServerDoesNotReflectUnescapedInput:
+    """The 404s echo a path segment back; `page()` composes markup, it does not
+    escape it. Echoing unescaped would be reflected XSS in the dev harness."""
+
+    def _handler(self):
+        from secondlook.web.server import Handler
+
+        sent = {}
+
+        class Fake(Handler):
+            def __init__(self):  # bypass BaseHTTPRequestHandler's socket setup
+                pass
+
+            def _send(self, status, html):
+                sent["status"] = status
+                sent["html"] = html
+
+        return Fake(), sent
+
+    def test_a_script_tag_in_the_path_is_escaped(self):
+        handler, sent = self._handler()
+        handler._error(404, "No fixture case with id <script>alert(1)</script>.")
+        assert "<script>" not in sent["html"]
+        assert "&lt;script&gt;" in sent["html"]
+        assert sent["status"] == 404
+
+    def test_the_route_help_text_survives_escaping_readably(self):
+        handler, sent = self._handler()
+        handler._error(404, "Routes are /cases/<id>/brief.")
+        assert "/cases/&lt;id&gt;/brief" in sent["html"]
