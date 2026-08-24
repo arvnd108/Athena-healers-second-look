@@ -35,6 +35,19 @@ class FakeQuestion:
     status: str
     priority: int
     created_at: datetime
+    triggered_by: dict | None = None
+
+
+@dataclass
+class FakeFindingRow:
+    id: uuid.UUID
+    question_id: uuid.UUID
+    claim: str
+    evidence_class: str
+    evidence_ref: dict
+    assumptions: list
+    evidence_level: str | None = None
+    status: str = "active"
 
 
 @dataclass
@@ -43,6 +56,7 @@ class FakeStore:
     events: list[FakeEvent] = field(default_factory=list)
     questions: list[FakeQuestion] = field(default_factory=list)
     findings: tuple = ()
+    finding_rows: list[FakeFindingRow] = field(default_factory=list)
 
     def get_case(self, case_id):
         if self.case is not None and self.case.id == case_id:
@@ -65,6 +79,60 @@ class FakeStore:
         from secondlook.query.fold import fold_store_events
 
         return fold_store_events(case_id, self.list_events(case_id))
+
+    def create_question(
+        self,
+        case_id,
+        *,
+        text,
+        status="open",
+        priority,
+        triggered_by=None,
+        suppressed_by=None,
+    ):
+        del case_id, suppressed_by
+        question = FakeQuestion(
+            id=uuid.uuid4(),
+            text=text,
+            status=status,
+            priority=priority,
+            created_at=datetime.now(),
+            triggered_by=triggered_by,
+        )
+        self.questions.append(question)
+        return question
+
+    def create_finding(
+        self,
+        question_id,
+        *,
+        claim,
+        evidence_class,
+        evidence_ref,
+        assumptions,
+        evidence_level=None,
+        status="active",
+    ):
+        from secondlook.case.store import serialize_assumptions
+
+        row = FakeFindingRow(
+            id=uuid.uuid4(),
+            question_id=question_id,
+            claim=claim,
+            evidence_class=evidence_class,
+            evidence_ref=evidence_ref,
+            assumptions=serialize_assumptions(assumptions),
+            evidence_level=evidence_level,
+            status=status,
+        )
+        self.finding_rows.append(row)
+        return row
+
+    def get_finding(self, finding_id):
+        for row in self.finding_rows:
+            if row.id == finding_id:
+                return row
+        return None
 
 
 class FakeGraph:

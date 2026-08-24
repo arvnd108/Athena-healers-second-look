@@ -1,12 +1,10 @@
-"""Case summary for MCP and the future REST GET /api/cases/{id}."""
+"""Case summary for MCP and REST GET /api/cases/{id}."""
 
 from __future__ import annotations
 
-from collections import Counter
-
-from secondlook.case.models import QUESTION_STATUSES
 from secondlook.query.contracts import AlterationView, CaseSummary, QuestionView
 from secondlook.query.fold import fold_store_events
+from secondlook.query.question_counts import question_status_counts
 from secondlook.query.result import QueryResult
 
 
@@ -20,9 +18,7 @@ def get_case_summary(store, case_id) -> QueryResult[CaseSummary]:
     state = fold_store_events(case_id, events)
     questions = store.list_questions(case_id)
     findings = store.list_active_findings(case_id)
-
-    counts = Counter(q.status for q in questions)
-    question_counts = {status: int(counts.get(status, 0)) for status in sorted(QUESTION_STATUSES)}
+    question_counts = question_status_counts(questions)
 
     summary = CaseSummary(
         case_id=str(case.id),

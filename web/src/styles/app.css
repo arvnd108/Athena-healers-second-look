@@ -1,0 +1,196 @@
+/* Subsystem M — the whole stylesheet.
+ *
+ * Read by two consumers, deliberately: the Vite client imports it, and
+ * `secondlook.web.render` inlines it verbatim into the server-rendered
+ * Finding Detail and Brief. One file, so the no-JS fallback cannot drift
+ * away from the client it stands in for.
+ *
+ * System fonts only. A webfont is 15-40 KB and a second connection to a
+ * third-party host before the first paint; on the 3G budget in
+ * docs/performance-budget.md that is the single most expensive decoration
+ * available, and it buys nothing a clinician needs.
+ */
+
+:root {
+  --ink: #14171a;
+  --ink-soft: #4a5560;
+  --paper: #ffffff;
+  --rule: #d6dce2;
+
+  /* ARCHITECTURE.md §5 / IMPLEMENTATION_PLAN.md §9.2. One accent per
+   * evidence class, and the border STYLE carries the same information as
+   * the colour -- a reviewer with deuteranopia, or reading a monochrome
+   * printout of the brief, must still see four distinct classes. */
+  --documented: #1a7f37;
+  --computed: #b26a00;
+  --regulatory: #1f5fb2;
+  --contextual: #6b7681;
+
+  --alarm: #b3261e;
+  --alarm-wash: #fdf3f2;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        "Helvetica Neue", Arial, sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+
+.wrap { max-width: 46rem; margin: 0 auto; padding: 1rem; }
+
+a { color: #0b5cab; }
+h1 { font-size: 1.4rem; margin: 0 0 .25rem; }
+h2 { font-size: 1.1rem; margin: 1.75rem 0 .5rem; }
+h3 { font-size: .95rem; margin: 0 0 .35rem; }
+
+.muted { color: var(--ink-soft); }
+.small { font-size: .85rem; }
+
+/* --- §9.1 The change banner. The wow moment; everything else can be ugly. --- */
+
+.banner {
+  border: 2px solid var(--alarm);
+  background: var(--alarm-wash);
+  padding: .85rem 1rem;
+  margin: 1rem 0 1.5rem;
+}
+
+.banner-head {
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--alarm);
+  margin-bottom: .6rem;
+}
+
+.change-line {
+  display: flex;
+  gap: .55rem;
+  align-items: baseline;
+  padding: .2rem 0;
+  flex-wrap: wrap;
+}
+
+/* The glyph is decorative; the change kind is also spelled out in
+ * .change-kind so a screen reader is not asked to interpret "↑". */
+.change-mark { font-weight: 700; width: 1rem; flex: none; }
+.change-when { color: var(--ink-soft); font-size: .85rem; margin-left: auto; }
+.change-kind { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+.supersession-head {
+  margin-top: .9rem;
+  padding-top: .7rem;
+  border-top: 1px solid var(--alarm);
+  font-weight: 700;
+  color: var(--alarm);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  font-size: .85rem;
+}
+
+/* §9.1: "The strikethrough must be literal text-decoration: line-through,
+ * visible from the back of the room." Not opacity, not a colour change --
+ * a struck claim must read as struck in a photograph of the screen. */
+.superseded-claim {
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+  font-weight: 600;
+}
+
+.supersession { padding: .45rem 0 .1rem; }
+.supersession-why { color: var(--ink-soft); font-size: .9rem; }
+.supersession-trigger { font-size: .9rem; }
+
+/* --- §9.2 Evidence classes, structurally distinct ---------------------- */
+
+.card { padding: .8rem 1rem; margin: .6rem 0; background: var(--paper); }
+
+.card-documented { border: 2px solid var(--documented); border-left-width: 6px; }
+.card-computed   { border: 2px dashed var(--computed);  border-left-width: 6px; }
+.card-regulatory { border: 2px solid var(--regulatory); border-left-width: 6px; }
+/* Contextual is subordinate on purpose: dotted, grey, smaller, and it
+ * never gets the heavy left rule the other three carry. It can never
+ * drive an option (ARCHITECTURE.md §5), so it must not look like it could. */
+.card-contextual {
+  border: 1px dotted var(--contextual);
+  color: var(--ink-soft);
+  font-size: .92rem;
+}
+
+.badge {
+  display: inline-block;
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  padding: .15rem .45rem;
+  border: 1px solid currentColor;
+  margin-bottom: .45rem;
+}
+.badge-documented { color: var(--documented); }
+.badge-computed   { color: var(--computed); }
+.badge-regulatory { color: var(--regulatory); }
+.badge-contextual { color: var(--contextual); }
+
+.claim { margin: .1rem 0 .5rem; }
+
+.method {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: .82rem;
+  color: var(--computed);
+}
+
+.caveats { margin: .5rem 0 0; padding-left: 1.1rem; }
+.caveats li { font-size: .87rem; color: var(--ink-soft); margin: .2rem 0; }
+
+/* --- Timeline, state panel, queue -------------------------------------- */
+
+.timeline { list-style: none; margin: 0; padding: 0; }
+.timeline li { border-left: 2px solid var(--rule); padding: .4rem 0 .4rem .8rem; }
+.timeline li.is-new { border-left-color: var(--alarm); }
+.event-type { font-size: .72rem; letter-spacing: .06em; color: var(--ink-soft); text-transform: uppercase; }
+
+.panel { border: 1px solid var(--rule); padding: .8rem 1rem; }
+.panel dl { margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: .3rem .9rem; }
+.panel dt { color: var(--ink-soft); font-size: .85rem; }
+.panel dd { margin: 0; }
+
+.q { border: 1px solid var(--rule); padding: .7rem .9rem; margin: .5rem 0; }
+.q-priority { font-size: .72rem; letter-spacing: .06em; color: var(--ink-soft); text-transform: uppercase; }
+.suppressed-count { border: 1px solid var(--rule); background: #f6f8fa; padding: .6rem .9rem; margin: 1rem 0; }
+
+.provenance { list-style: none; margin: .5rem 0 0; padding: 0; }
+.provenance li { border-left: 2px solid var(--rule); padding: .35rem 0 .35rem .8rem; margin: 0; }
+.provenance .step { font-weight: 600; font-size: .88rem; }
+.provenance .detail { font-size: .88rem; color: var(--ink-soft); }
+
+.actions { margin-top: 1rem; display: flex; gap: .5rem; flex-wrap: wrap; }
+.actions button, .actions a.btn {
+  font: inherit; font-size: .9rem; padding: .45rem .8rem;
+  border: 1px solid var(--rule); background: #f6f8fa; color: var(--ink);
+  cursor: pointer; text-decoration: none;
+}
+
+.nojs-note { border: 1px solid var(--rule); background: #f6f8fa; padding: .6rem .9rem; font-size: .85rem; color: var(--ink-soft); }
+
+/* --- Print: the Brief is a tumour-board handout ------------------------ */
+
+@media print {
+  @page { margin: 14mm; }
+  body { font-size: 11pt; }
+  .wrap { max-width: none; padding: 0; }
+  .actions, .nojs-note, nav { display: none; }
+  .card, .panel, .q, .banner { break-inside: avoid; }
+  /* Borders are the only thing separating the four evidence classes on
+   * paper, so force them to print even when the browser drops backgrounds. */
+  .card { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  /* A citation the reader cannot follow off-paper is not a citation. */
+  a[href]::after { content: " (" attr(href) ")"; font-size: 9pt; word-break: break-all; }
+  .superseded-claim { text-decoration: line-through; }
+}

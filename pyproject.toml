@@ -77,6 +77,10 @@ select = ["E", "F", "W", "B", "BLE", "I", "UP"]
 # specific exception type at its own call site — a repo-wide rule, not a
 # preference. See docs/rarecure-build-reference.md.
 
+[tool.ruff.lint.per-file-ignores]
+# FastAPI's documented pattern is `x: T = Depends(...)` in the signature.
+"src/secondlook/api/**" = ["B008"]
+
 [tool.black]
 line-length = 100
 target-version = ["py311"]

@@ -1,0 +1,49 @@
+{
+  "case_id": "8c1d4e2a-0000-4000-8000-000000000a01",
+  "since": "2026-01-02",
+  "computed_at": "2026-02-16T08:30:00Z",
+  "changes": [
+    {
+      "kind": "new_alteration",
+      "summary": "EGFR T790M newly observed",
+      "detail": {"gene": "EGFR", "variant": "T790M", "assay": "NGS panel"},
+      "triggering_event_id": "e1000000-0000-4000-8000-000000000004",
+      "observed_on": "2026-02-14"
+    },
+    {
+      "kind": "biomarker_shift",
+      "summary": "PD-L1 crossed 50.0 (35.0 -> 62.0)",
+      "detail": {"name": "PD-L1", "from": 35.0, "to": 62.0, "threshold": 50.0},
+      "triggering_event_id": "e1000000-0000-4000-8000-000000000005",
+      "observed_on": "2026-02-14"
+    },
+    {
+      "kind": "disease_progression",
+      "summary": "disease progression recorded",
+      "detail": {"status": "progression", "sites": ["liver", "lung"], "from": null},
+      "triggering_event_id": "e1000000-0000-4000-8000-000000000006",
+      "observed_on": "2026-02-14"
+    }
+  ],
+  "supersessions": [
+    {
+      "finding_id": "f0000000-0000-4000-8000-000000000007",
+      "finding_label": "Finding #7",
+      "finding_claim": "osimertinib-naive, EGFR-TKI candidate",
+      "broken_assumption": "no known alteration in EGFR",
+      "triggering_event_id": "e1000000-0000-4000-8000-000000000004",
+      "triggering_event_label": "14 Feb sequencing",
+      "note": "This finding assumed no known alteration in EGFR. That is no longer true."
+    },
+    {
+      "finding_id": "f0000000-0000-4000-8000-000000000011",
+      "finding_label": "Finding #11",
+      "finding_claim": "PD-L1 low; checkpoint monotherapy not indicated",
+      "broken_assumption": "PD-L1 below 50.0",
+      "triggering_event_id": "e1000000-0000-4000-8000-000000000005",
+      "triggering_event_label": "14 Feb IHC",
+      "note": "This finding assumed PD-L1 below 50.0. That is no longer true."
+    }
+  ],
+  "unchanged_reason": null
+}
