@@ -1,5 +1,7 @@
 # API Contracts
 
+> **Legacy.** This document describes the pre-case-memory Tier 1 / Tier 2 mutation-query flow (`POST /api/query`). It is still accurate for that flow. Case-memory endpoints (`CaseSummary`, `ChangeSetForApi`, trial matching, access pathways) are specified in `docs/api-contracts-v2.md` and are what issue #59's REST layer will consume.
+
 Schemas are illustrative (pseudo-JSON-Schema) — adapt field names to your actual implementation, but preserve the required fields and the "no evidence, no claim" rule below throughout.
 
 ## POST /api/query (frontend → backend)

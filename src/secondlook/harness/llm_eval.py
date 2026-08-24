@@ -100,8 +100,8 @@ def render_markdown(
         "in the adapters before any run and are not adjusted after seeing results.",
         "",
         "Safety-violation categories are intentionally narrow and will grow when",
-        "issue #18 (guideline concordance) lands. Trial-criteria extraction has no",
-        "ungrounded variant by design.",
+        "issue #18 (guideline concordance) lands. Trial-criteria extraction and",
+        "intake extraction have no ungrounded variant by design.",
         "",
     ]
     for result in results:

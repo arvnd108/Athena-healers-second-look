@@ -39,6 +39,7 @@ api = [
     "alembic>=1.14",
     "pydantic>=2.9",
     "anthropic>=0.40",
+    "mcp>=1.2,<2",
 ]
 dev = [
     "pytest>=8.0",
@@ -75,6 +76,10 @@ select = ["E", "F", "W", "B", "BLE", "I", "UP"]
 # BLE001: no bare `except:` / `except Exception:`. Every external call catches a
 # specific exception type at its own call site — a repo-wide rule, not a
 # preference. See docs/rarecure-build-reference.md.
+
+[tool.ruff.lint.per-file-ignores]
+# FastAPI's documented pattern is `x: T = Depends(...)` in the signature.
+"src/secondlook/api/**" = ["B008"]
 
 [tool.black]
 line-length = 100

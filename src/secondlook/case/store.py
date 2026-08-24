@@ -23,8 +23,43 @@ from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from secondlook.case.assumptions import (
+    Finding as DomainFinding,
+)
+from secondlook.case.assumptions import (
+    assumption_from_dict,
+    assumption_to_dict,
+)
 from secondlook.case.models import EVENT_TYPES, Case, CaseEvent, Decision, Finding, Question
 from secondlook.case.state import CaseState, RawEvent, fold_events
+
+
+def serialize_assumptions(assumptions: list) -> list[dict]:
+    """Persist assumptions in the `assumption_to_dict` shape.
+
+    Dicts are round-tripped through `assumption_from_dict` first so a
+    malformed payload fails at write time rather than being stored as
+    something `list_active_findings` cannot rebuild.
+    """
+    serialized: list[dict] = []
+    for item in assumptions:
+        obj = assumption_from_dict(item) if isinstance(item, dict) else item
+        serialized.append(assumption_to_dict(obj))
+    return serialized
+
+
+def domain_finding_from_row(row: Finding, case_id: uuid.UUID) -> DomainFinding:
+    """Rebuild a domain Finding. Raises on any assumption that will not deserialize."""
+    payloads = row.assumptions or []
+    if not isinstance(payloads, list):
+        raise TypeError(
+            f"finding {row.id} assumptions must be a list, got {type(payloads).__name__}"
+        )
+    return DomainFinding(
+        id=str(row.id),
+        case_id=str(case_id),
+        assumptions=tuple(assumption_from_dict(p) for p in payloads),
+    )
 
 
 class CaseStore:
@@ -152,6 +187,11 @@ class CaseStore:
         self._session.flush()
         return question
 
+    def list_questions(self, case_id: uuid.UUID) -> list[Question]:
+        """ORM Question rows for this case, `created_at` ascending."""
+        stmt = select(Question).where(Question.case_id == case_id).order_by(Question.created_at)
+        return list(self._session.scalars(stmt))
+
     # -- Findings -----------------------------------------------------------
 
     def create_finding(
@@ -172,13 +212,32 @@ class CaseStore:
             evidence_class=evidence_class,
             evidence_ref=evidence_ref,
             evidence_level=evidence_level,
-            assumptions=assumptions,
+            assumptions=serialize_assumptions(assumptions),
             status=status,
             created_at=datetime.now(UTC),
         )
         self._session.add(finding)
         self._session.flush()
         return finding
+
+    def get_finding(self, finding_id: uuid.UUID) -> Finding | None:
+        return self._session.get(Finding, finding_id)
+
+    def list_active_findings(self, case_id: uuid.UUID) -> tuple[DomainFinding, ...]:
+        """Active domain Findings for this case, `created_at` ascending.
+
+        Joins `findings` to `questions` because findings do not carry
+        `case_id`. A row whose assumptions fail to deserialize is a hard
+        error -- skipping it would hide a supersession.
+        """
+        stmt = (
+            select(Finding, Question.case_id)
+            .join(Question, Finding.question_id == Question.id)
+            .where(Question.case_id == case_id, Finding.status == "active")
+            .order_by(Finding.created_at)
+        )
+        rows = self._session.execute(stmt).all()
+        return tuple(domain_finding_from_row(row, row_case_id) for row, row_case_id in rows)
 
     def mark_superseded(
         self, finding_id: uuid.UUID, *, superseded_by: uuid.UUID, note: str

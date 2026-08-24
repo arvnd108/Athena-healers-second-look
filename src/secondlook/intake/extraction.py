@@ -12,6 +12,7 @@ behind this interface interchangeably.
 
 from __future__ import annotations
 
+import json
 import uuid
 from typing import Protocol
 
@@ -19,18 +20,20 @@ from secondlook.case.models import EVENT_TYPES
 from secondlook.intake.models import (
     DOCUMENT_TYPES,
     ExtractedEventCandidate,
+    FieldValue,
     ProposedCaseEvent,
     UploadedDocument,
 )
+from secondlook.synthesis.llm_client import LLMClient
 
 LOW_CONFIDENCE_THRESHOLD = 0.7
 # No number is specified anywhere in this subsystem's source issue -- it
 # says only "low-confidence fields are highlighted for review, not
 # silently accepted." 0.7 is a documented placeholder pending real
 # extraction-accuracy measurement through the LLM Decision-Quality & Safety
-# Monitoring Harness (subsystem P, not yet built) -- see this module's
-# eval fixtures under tests/intake/fixtures/ for the accuracy-measurement
-# starting point once that harness exists.
+# Monitoring Harness -- see tests/intake/fixtures/ and
+# harness/adapters/intake.py. 0.7 is not the same constant as
+# INTAKE_THRESHOLD (field-recall on the held-out set); do not merge them.
 
 
 class ExtractionBackend(Protocol):
@@ -101,6 +104,15 @@ def extract_case_events(
     return proposed
 
 
+class ExtractionParseError(RuntimeError):
+    """Model output was not a usable JSON array of event candidates.
+
+    Raised for a JSON parse failure or a missing required key. All-or-nothing:
+    one malformed candidate fails the whole `.extract()` call. `FieldValue`
+    validation errors propagate as `ValueError` and are not wrapped here.
+    """
+
+
 class StubExtractionBackend:
     """A deterministic, no-network backend for tests and demos. Returns
     whatever candidates it was constructed with, regardless of input text
@@ -116,32 +128,101 @@ class StubExtractionBackend:
         return list(self._candidates)
 
 
+_JSON_OUTPUT_CONTRACT = (
+    "Respond with a JSON array only, [] if nothing found, no prose before or "
+    "after. Each object must be "
+    '{"event_type": "...", "fields": {"<name>": {"value": ..., "confidence": '
+    '0.0-1.0}, ...}, "occurred_at": "YYYY-MM-DD" | null}.'
+)
+
+_RAW_RESPONSE_TRUNCATE = 500
+
+
+def _strip_json_fence(raw: str) -> str:
+    """Defensively unwrap a leading/trailing markdown ```json fence."""
+    text = raw.strip()
+    if not text.startswith("```"):
+        return text
+    lines = text.splitlines()
+    if lines and lines[0].startswith("```"):
+        lines = lines[1:]
+    if lines and lines[-1].strip() == "```":
+        lines = lines[:-1]
+    return "\n".join(lines).strip()
+
+
+def _parse_extraction_response(raw: str) -> list[ExtractedEventCandidate]:
+    """Parse one model completion. All-or-nothing: never return a partial list."""
+    stripped = _strip_json_fence(raw)
+    try:
+        data = json.loads(stripped)
+    except json.JSONDecodeError as exc:
+        raise ExtractionParseError(
+            "extraction response is not JSON: " f"{raw[:_RAW_RESPONSE_TRUNCATE]!r}"
+        ) from exc
+    if not isinstance(data, list):
+        raise ExtractionParseError(
+            "extraction response must be a JSON array: " f"{raw[:_RAW_RESPONSE_TRUNCATE]!r}"
+        )
+    candidates: list[ExtractedEventCandidate] = []
+    for item in data:
+        if not isinstance(item, dict):
+            raise ExtractionParseError(
+                "each extraction candidate must be a JSON object: "
+                f"{raw[:_RAW_RESPONSE_TRUNCATE]!r}"
+            )
+        if "event_type" not in item or "fields" not in item:
+            raise ExtractionParseError(
+                "extraction candidate missing required key "
+                f"(event_type, fields): {raw[:_RAW_RESPONSE_TRUNCATE]!r}"
+            )
+        fields_raw = item["fields"]
+        if not isinstance(fields_raw, dict):
+            raise ExtractionParseError(
+                "extraction candidate fields must be an object: "
+                f"{raw[:_RAW_RESPONSE_TRUNCATE]!r}"
+            )
+        fields: dict[str, FieldValue] = {}
+        for name, spec in fields_raw.items():
+            if not isinstance(spec, dict) or "value" not in spec or "confidence" not in spec:
+                raise ExtractionParseError(
+                    f"field {name!r} must be "
+                    '{"value": ..., "confidence": 0.0-1.0}: '
+                    f"{raw[:_RAW_RESPONSE_TRUNCATE]!r}"
+                )
+            # FieldValue.__post_init__ raises ValueError on a bad confidence;
+            # do not wrap that — it is already the dedicated validation error.
+            fields[name] = FieldValue(value=spec["value"], confidence=spec["confidence"])
+        occurred_at = item.get("occurred_at")
+        if occurred_at is not None and not isinstance(occurred_at, str):
+            raise ExtractionParseError(
+                "occurred_at must be a string or null: " f"{raw[:_RAW_RESPONSE_TRUNCATE]!r}"
+            )
+        candidates.append(
+            ExtractedEventCandidate(
+                event_type=item["event_type"],
+                fields=fields,
+                occurred_at=occurred_at,
+            )
+        )
+    return candidates
+
+
 class ClaudeExtractionBackend:
-    """A real `ExtractionBackend` calling the Anthropic API, one prompt per
+    """A real `ExtractionBackend` calling an `LLMClient`, one prompt per
     `document_type`.
 
-    **Unverified.** This class has never been run against a live model --
-    there is no API key available in the environment this was built in,
-    and no automated test exercises it (the whole test suite runs against
-    `StubExtractionBackend` instead, which is offline and free). Per this
-    project's own standing rule (`docs/validation-plan.md`'s discipline,
-    extended by subsystem P's not-yet-built harness), an unvalidated
-    extraction path must not be presented as trustworthy. Before this
-    class is used for anything beyond a manual smoke test:
+    Inject `llm_client=` for tests and for the harness (typically
+    `get_llm_client()`). When omitted, `.extract()` lazily constructs
+    `AnthropicClient(model=..., api_key=...)` — never at `__init__` or
+    module import, so a bare `ClaudeExtractionBackend()` stays free of
+    any SDK import. Injecting `get_llm_client()` also picks up
+    `ATHENA_LLM_PROVIDER=openai_compatible` without a second wrapper.
 
-    1. Run it against `tests/intake/fixtures/`'s hand-labeled eval set and
-       measure real accuracy per field -- do not assume the prompts below
-       work as written.
-    2. Wire that measurement through subsystem P's harness once it exists,
-       the same way subsystem F's criteria-extraction harness is meant to.
-    3. Only then should a caller depend on this class's output without a
-       human catching every mistake -- which, per this module's own
-       design, is every extraction, always, regardless of measured
-       accuracy: confirmation is not a training-wheels step to remove
-       once accuracy is good, it is the permanent architecture.
-
-    The prompts below are a first-draft starting point, not a tuned or
-    validated artifact.
+    Accuracy is measured by `harness/adapters/intake.py` against
+    `tests/intake/fixtures/eval_set.yaml`. Confirmation before anything
+    reaches `case/store.py` is still the permanent architecture, not a
+    training-wheels step.
     """
 
     _PROMPTS: dict[str, str] = {
@@ -150,7 +231,7 @@ class ClaudeExtractionBackend:
             "Identify any of: ALTERATION_OBSERVED (gene, variant, variant_type, "
             "assay, tested_on), BIOMARKER_MEASURED (name, value, unit, "
             "measured_on). Return only fields explicitly stated in the text; "
-            "never infer or guess a value that is not written."
+            "never infer or guess a value that is not written. " + _JSON_OUTPUT_CONTRACT
         ),
         "sequencing": (
             "Extract structured findings from this sequencing/NGS report. "
@@ -158,7 +239,7 @@ class ClaudeExtractionBackend:
             "assay, tested_on), BIOMARKER_MEASURED (name, value, unit, "
             "measured_on, e.g. TMB/MSI/PD-L1 if reported). Return only fields "
             "explicitly stated in the text; never infer or guess a value that "
-            "is not written."
+            "is not written. " + _JSON_OUTPUT_CONTRACT
         ),
         "clinical_note": (
             "Extract structured findings from this clinical note. Identify any "
@@ -166,26 +247,38 @@ class ClaudeExtractionBackend:
             "reason), DISEASE_ASSESSMENT (status: response|stable|progression, "
             "sites, assessed_on), CLINICAL_QUESTION (text, if the note poses an "
             "open question). Return only fields explicitly stated in the text; "
-            "never infer or guess a value that is not written."
+            "never infer or guess a value that is not written. " + _JSON_OUTPUT_CONTRACT
         ),
     }
 
-    def __init__(self, *, model: str = "claude-sonnet-5", api_key: str | None = None):
+    def __init__(
+        self,
+        *,
+        model: str | None = None,
+        api_key: str | None = None,
+        llm_client: LLMClient | None = None,
+    ):
         self._model = model
         self._api_key = api_key
+        self._llm_client = llm_client
+        self._fallback_client: LLMClient | None = None
+
+    def _client(self) -> LLMClient:
+        if self._llm_client is not None:
+            return self._llm_client
+        if self._fallback_client is None:
+            from secondlook.synthesis.llm_client import AnthropicClient
+
+            # Lazy: AnthropicClient itself only imports the SDK inside
+            # `.complete()`, never here. Constructing this backend with no
+            # arguments therefore still has no network/SDK dependency.
+            self._fallback_client = AnthropicClient(model=self._model, api_key=self._api_key)
+        return self._fallback_client
 
     def extract(self, text: str, document_type: str) -> list[ExtractedEventCandidate]:
         if document_type not in self._PROMPTS:
             raise ValueError(f"No prompt defined for document_type {document_type!r}")
-
-        # Deliberately not implemented against a live client here. Wiring
-        # this to `anthropic.Anthropic(...)` and parsing its response into
-        # `ExtractedEventCandidate` objects is the next step -- but doing
-        # so without the ability to run it against a real model and check
-        # the output would mean shipping unverified prompt-parsing code
-        # dressed up as working code. See this class's docstring.
-        raise NotImplementedError(
-            "ClaudeExtractionBackend is a documented skeleton, not a working "
-            "implementation -- see this class's docstring for what's needed "
-            "before it can be. Use StubExtractionBackend for tests."
-        )
+        # LLMClientError from `.complete()` propagates uncaught — it is
+        # already the dedicated type for a transport/API failure.
+        raw = self._client().complete(text, system=self._PROMPTS[document_type])
+        return _parse_extraction_response(raw)
