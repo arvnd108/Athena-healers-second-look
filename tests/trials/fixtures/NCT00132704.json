@@ -1,0 +1,33 @@
+{
+  "registry_id": "NCT00132704",
+  "source": "ClinicalTrials.gov v2",
+  "note": "Real registry text, fetched from the ClinicalTrials.gov v2 API. Annotations were read by hand against the source, not taken from extractor output. criteria_text is the complete eligibility section so C3 sees every line; the annotated lines are a seeded random sample (see docs/trial-extraction-validation-plan.md, Corpus).",
+  "criteria_text": "Inclusion Criteria:\n\n* Patients who are felt to have adequate tumor volume for these studies, at least a 2 x 2 x 2 cm3 tumor by physical exam, imaging studies or colonoscopy reports\n* Primary or recurrent tumors are eligible\n* Patients must be suitable candidates for surgery\n* Patients who have signed the informed consent\n\nExclusion Criteria:\n\n* Patients who are not considered suitable candidates for surgery\n* Patients who have received prior radiation therapy to the tumor being removed\n* Patients who have received chemotherapy within 6 months of tumor removal\n* Patients who are pregnant\n* Patients may choose to be excluded at any time\n* Minors are excluded from this study because there are expected to be very few minors with the tumor types which the investigators are evaluating in this study",
+  "annotations": [
+    {
+      "line": "Patients who are felt to have adequate tumor volume for these studies, at least a 2 x 2 x 2 cm3 tumor by physical exam, imaging studies or colonoscopy reports",
+      "type": "UNPARSEABLE",
+      "section": "inclusion"
+    },
+    {
+      "line": "Patients must be suitable candidates for surgery",
+      "type": "UNPARSEABLE",
+      "section": "inclusion"
+    },
+    {
+      "line": "Patients who have signed the informed consent",
+      "type": "UNPARSEABLE",
+      "section": "inclusion"
+    },
+    {
+      "line": "Patients who are not considered suitable candidates for surgery",
+      "type": "UNPARSEABLE",
+      "section": "exclusion"
+    },
+    {
+      "line": "Patients who are pregnant",
+      "type": "UNPARSEABLE",
+      "section": "exclusion"
+    }
+  ]
+}

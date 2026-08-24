@@ -1,0 +1,33 @@
+{
+  "registry_id": "NCT01216826",
+  "source": "ClinicalTrials.gov v2",
+  "note": "Real registry text, fetched from the ClinicalTrials.gov v2 API. Annotations were read by hand against the source, not taken from extractor output. criteria_text is the complete eligibility section so C3 sees every line; the annotated lines are a seeded random sample (see docs/trial-extraction-validation-plan.md, Corpus).",
+  "criteria_text": "Inclusion Criteria:\n\n* Osteosarcoma histological confirmation.\n* No option of known curative treatment, neither approved treatment that increases survival with adequate quality of life.\n* Karnofsky scale ≥ 50 for patients over 16 years and Lansky scale ≥ 50 for patients under 16 years.\n* Subjects should not have received antineoplastic therapy \\< 4 weeks before study treatment initiation.\n* Adequate hematological function: neutrophil count \\> 1.500/mm³, platelets \\> 100.000/mm³ and hemoglobin \\> 8.0 mg/dL.\n* Adequate renal function, as defined below:\n\nAge Maximum serum creatinine (mg/dL) 0 - 29 days 0,4 - 0,7 1 month - 3 years 0,7 4 - 7 years 0,8 8 - 10 years 0,9 11 - 12 years 1,0 13 - 17 years 1,2\n\n≥18 years 1,3\n\n* Adequate hepatic function: total bilirubin ≤ 1.5 x ULN and transaminases ≤ 2.5 x ULN.\n* Patient and/or legal responsible must sign ICF.\n* Life expectation \\> 8 weeks.\n* Measurable disease, according to RECIST criteria.\n* For female patients of childbearing age: Presence of a negative pregnancy test within 7 days prior to day 0.\n* The patient agrees to use effective contraception if procreative potential exists. Use of reliable means of contraception (e.g. hormonal contraceptive, patch, vaginal ring, intrauterine device, physical barrier, abstinence) for subjects of reproductive potential (males and females) is required during study treatment and for 3 months following last dose of study drug\n\nExclusion Criteria:\n\n* History of myocardial infarction, angina or cerebrovascular accident related to atherosclerosis.\n* Pulmonary disorder (e.g. FEV1 or DLCO ≤ 70% upper expected).\n* Significant hematologic or hepatic abnormality (transaminases levels \\> 2.5 x ULN or serum bilirubin \\>1.5 x ULN, hemoglobin \\< 8 g/dL, platelets \\< 100.000/ mm3, ANC \\< 1.500/mm3).\n* Has other existing serious medical conditions that could adversely affect the ability of the patient to be treated in accordance with the protocol.\n* Any condition, therapy, or medical condition, which, in the opinion of the attending physician could represent a risk for the patient or adversely affect the study objectives.\n* If female, is pregnant or lactating.\n* Active infection at the moment of recruitment.\n* Previous history of organ transplantation.\n* Recent surgery \\< 2 months before entering study.\n* Concomitant antineoplastic therapy.\n* Patient received more than one rescue treatment, previously.\n* Previous treatment with mTor inhibitors (ex: sirolimus, temsirolimus, everolimus).\n* Use of investigational drug \\< 30 days before entering study.\n* Non-controlled hyperlipidaemia: serum cholesterol (fasting) \\> 300 mg/dL or 7,75 mmol/L and triglycerides (fasting) \\> 2,5 x ULN.\n* Non-controlled diabetes mellitus defined as: glycemia (fasting) \\> 1.5 x ULN.\n* Patient with hemorrhagic disorder or using oral anti-vitamin K (except warfarin in low doses).\n* Patient with HIV infection.\n* Incapable to perform protocol visits.\n* Another neoplasia for the last 2 years (except squamous or basocellular skin cancer).\n* Hypersensitivity history to rapamycin analogs.\n* Chronic treatment with corticoids (except per oral, topical or local treatment) or another immunosuppressor agent.",
+  "annotations": [
+    {
+      "line": "History of myocardial infarction, angina or cerebrovascular accident related to atherosclerosis.",
+      "type": "UNPARSEABLE",
+      "section": "exclusion"
+    },
+    {
+      "line": "Active infection at the moment of recruitment.",
+      "type": "UNPARSEABLE",
+      "section": "exclusion"
+    },
+    {
+      "line": "Concomitant antineoplastic therapy.",
+      "type": "UNPARSEABLE",
+      "section": "exclusion"
+    },
+    {
+      "line": "Patient with HIV infection.",
+      "type": "UNPARSEABLE",
+      "section": "exclusion"
+    },
+    {
+      "line": "Another neoplasia for the last 2 years (except squamous or basocellular skin cancer).",
+      "type": "UNPARSEABLE",
+      "section": "exclusion"
+    }
+  ]
+}

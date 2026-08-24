@@ -1,0 +1,23 @@
+{
+  "registry_id": "NCT00004157",
+  "source": "ClinicalTrials.gov v2",
+  "note": "Real registry text, fetched from the ClinicalTrials.gov v2 API. Annotations were read by hand against the source, not taken from extractor output. criteria_text is the complete eligibility section so C3 sees every line; the annotated lines are a seeded random sample (see docs/trial-extraction-validation-plan.md, Corpus).",
+  "criteria_text": "DISEASE CHARACTERISTICS: Diagnosis of non-Hodgkin's lymphoma, Hodgkin's disease, breast cancer, or other solid tumors with eligibility for FHCRC/PSOC protocols involving autologous peripheral blood stem cell transplantation No evidence of bone marrow disease No pericardial effusion, pleural effusion, or ascites No CNS involvement Hormone receptor status: Not specified\n\nPATIENT CHARACTERISTICS: Age: 70 and under Menopausal status: Not specified Performance status: Not specified Life expectancy: Not specified Hematopoietic: Absolute neutrophil count at least 1,500/mm3 Platelet count at least 100,000/mm3 Hepatic: Bilirubin no greater than 2.5 times upper limit of normal (ULN) SGOT no greater than 2.5 times ULN Renal: Creatinine no greater than 2.0 mg/dL No medically unmanageable, severe hypokalemia Cardiovascular: No history of atrial arrhythmia or congestive heart failure No history of thromboembolic disease, except successfully treated catheter related thrombosis LVEF at least 45% Other: No active infection requiring systemic antibiotics HIV negative No known allergy to murine or E. coli proteins No documented prior anaphylactic reaction to interleukin-11 or filgrastim (G-CSF) No papilledema No history of Factor V Leiden defect, factor II, antithrombin III, Protein C or Protein S deficiencies Not pregnant or nursing Fertile patients must use effective contraception\n\nPRIOR CONCURRENT THERAPY: Biologic therapy: See Disease Characteristics Chemotherapy: No prior cumulative dose of doxorubicin greater than 300 mg/m2 At least 3 weeks since prior chemotherapy Endocrine therapy: No concurrent estrogen supplementation Radiotherapy: No prior radiotherapy to the pelvic area Surgery: Not specified Other: No chronic diuretic therapy At least 1 week since prior aspirin or anticoagulants except low dose anticoagulation to prevent catheter thrombosis",
+  "annotations": [
+    {
+      "line": "DISEASE CHARACTERISTICS: Diagnosis of non-Hodgkin's lymphoma, Hodgkin's disease, breast cancer, or other solid tumors with eligibility for FHCRC/PSOC protocols involving autologous peripheral blood stem cell transplantation No evidence of bone marrow disease No pericardial effusion, pleural effusion, or ascites No CNS involvement Hormone receptor status: Not specified",
+      "type": "UNPARSEABLE",
+      "section": "unknown"
+    },
+    {
+      "line": "PATIENT CHARACTERISTICS: Age: 70 and under Menopausal status: Not specified Performance status: Not specified Life expectancy: Not specified Hematopoietic: Absolute neutrophil count at least 1,500/mm3 Platelet count at least 100,000/mm3 Hepatic: Bilirubin no greater than 2.5 times upper limit of normal (ULN) SGOT no greater than 2.5 times ULN Renal: Creatinine no greater than 2.0 mg/dL No medically unmanageable, severe hypokalemia Cardiovascular: No history of atrial arrhythmia or congestive heart failure No history of thromboembolic disease, except successfully treated catheter related thrombosis LVEF at least 45% Other: No active infection requiring systemic antibiotics HIV negative No known allergy to murine or E. coli proteins No documented prior anaphylactic reaction to interleukin-11 or filgrastim (G-CSF) No papilledema No history of Factor V Leiden defect, factor II, antithrombin III, Protein C or Protein S deficiencies Not pregnant or nursing Fertile patients must use effective contraception",
+      "type": "AGE_RANGE",
+      "section": "unknown"
+    },
+    {
+      "line": "PRIOR CONCURRENT THERAPY: Biologic therapy: See Disease Characteristics Chemotherapy: No prior cumulative dose of doxorubicin greater than 300 mg/m2 At least 3 weeks since prior chemotherapy Endocrine therapy: No concurrent estrogen supplementation Radiotherapy: No prior radiotherapy to the pelvic area Surgery: Not specified Other: No chronic diuretic therapy At least 1 week since prior aspirin or anticoagulants except low dose anticoagulation to prevent catheter thrombosis",
+      "type": "PRIOR_THERAPY_EXCLUDES",
+      "section": "unknown"
+    }
+  ]
+}

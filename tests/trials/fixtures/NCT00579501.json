@@ -1,0 +1,33 @@
+{
+  "registry_id": "NCT00579501",
+  "source": "ClinicalTrials.gov v2",
+  "note": "Real registry text, fetched from the ClinicalTrials.gov v2 API. Annotations were read by hand against the source, not taken from extractor output. criteria_text is the complete eligibility section so C3 sees every line; the annotated lines are a seeded random sample (see docs/trial-extraction-validation-plan.md, Corpus).",
+  "criteria_text": "Inclusion Criteria:\n\n* Pathological diagnosis of myxoid / round cell liposarcoma (MRCL) and availability of pathology specimens for central review and pharmacogenomic studies\n* Clinical evidence of locally advanced (Stage III), non-metastatic tumor, including locally recurring disease after initial surgery\n* Measurable disease (by Response Evaluation Criteria In Solid Tumors \\[RECIST\\])\n* No prior chemotherapy or radiation (except for adjuvant post-operative radiotherapy)\n* Eastern Cooperative Oncology Group (ECOG) Performance Status (PS) 0-2\n\nExclusion Criteria:\n\n* Known hypersensitivity to any of the components of the trabectedin intravenous (iv) formulation or dexamethasone\n* Pregnant or lactating women and women of reproductive potential who are not using effective contraceptive methods\n* History of another neoplastic disease (except basal cell carcinoma or cervical carcinoma in situ adequately treated) unless in remission for 5 years or longer\n* Known distant metastases\n* Other serious illnesses such as congestive heart failure or angina pectoris, myocardial infarction within 1 year before enrollment, uncontrolled arterial hypertension or arrhythmias",
+  "annotations": [
+    {
+      "line": "Clinical evidence of locally advanced (Stage III), non-metastatic tumor, including locally recurring disease after initial surgery",
+      "type": "DISEASE_STAGE_REQUIRES",
+      "section": "inclusion"
+    },
+    {
+      "line": "Eastern Cooperative Oncology Group (ECOG) Performance Status (PS) 0-2",
+      "type": "ECOG_MAX",
+      "section": "inclusion"
+    },
+    {
+      "line": "History of another neoplastic disease (except basal cell carcinoma or cervical carcinoma in situ adequately treated) unless in remission for 5 years or longer",
+      "type": "UNPARSEABLE",
+      "section": "exclusion"
+    },
+    {
+      "line": "Known distant metastases",
+      "type": "UNPARSEABLE",
+      "section": "exclusion"
+    },
+    {
+      "line": "Other serious illnesses such as congestive heart failure or angina pectoris, myocardial infarction within 1 year before enrollment, uncontrolled arterial hypertension or arrhythmias",
+      "type": "UNPARSEABLE",
+      "section": "exclusion"
+    }
+  ]
+}

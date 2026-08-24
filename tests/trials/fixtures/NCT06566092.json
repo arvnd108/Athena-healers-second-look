@@ -1,0 +1,33 @@
+{
+  "registry_id": "NCT06566092",
+  "source": "ClinicalTrials.gov v2",
+  "note": "Real registry text, fetched from the ClinicalTrials.gov v2 API. Annotations were read by hand against the source, not taken from extractor output. criteria_text is the complete eligibility section so C3 sees every line; the annotated lines are a seeded random sample (see docs/trial-extraction-validation-plan.md, Corpus).",
+  "criteria_text": "Inclusion Criteria:\n\n1. Participant is ≥ 8 kg and ≤ 21 years of age at the time of informed consent and assent.\n2. Histologically or cytologically confirmed recurrent or refractory solid tumor (Rhabdomyosarcoma, Ewing sarcoma, primary CNS malignancies, melanoma) after standard therapy which has failed all available curative therapy.\n3. Acceptable performance status and an estimated life expectancy of \\> 6 months.\n4. At least one resectable lesion (solitary or aggregate lesions) for TIL generation.\n5. Following tumor resection for TIL generation, the participant will have at least one remaining measurable lesion for response assessment.\n6. Preplanned surgical procedure(s) will take place at least 14 days (for major operative procedures) prior to the tumor resection.\n7. All prior anticancer treatment-related AEs should be recovered, exceptions are peripheral neuropathy, alopecia, vitiligo, or medically controlled endocrine dysfunction.\n8. Agreement to abide by the protocol indicated contraception use, including refraining from donating sperm or eggs (ova, oocytes), as appropriate for the age and sexual activity of pediatric, adolescent, and young adult participants and as required by local regulations.\n9. Signed informed consent and assent when applicable.\n10. Written authorization for use and disclosure of protected health information.\n11. Ability to adhere to the study visit schedule and other protocol requirements.\n12. Acceptable hematologic parameters.\n13. Adequate organ function.\n14. Modified Ross criteria class 1 and an LVFS \\> 25% or an LVEF ≥ 50%.\n15. Adequate pulmonary function.\n16. Participant and/or the legal guardian who provided consent is willing for the participant to receive optimal supportive care.\n17. A legal guardian or primary caregiver must be available to help the study-site personnel ensure follow-up and accompany the participant to the study site on each assessment day according to the SoA.\n\nExclusion Criteria:\n\n1. Participant with a non-CNS tumor has symptomatic untreated brain metastases and/or carcinomatous meningitis.\n2. Participant has an active or uncontrolled intercurrent illness(es) that would pose increased risks for study participation.\n3. Participants are not eligible if they experience uncontrolled seizures.\n4. Participants with history of intracranial hemorrhage/spinal cord hemorrhage.\n5. Participant has active uveitis that requires active treatment.\n6. Participant has significant psychiatric disease or substance abuse in the investigator's opinion that would prevent adequate informed consent.\n7. Participant has any form of primary or acquired immunodeficiency.\n8. History of clinically significant chronic obstructive pulmonary disease, asthma, interstitial lung disease, or other chronic lung disease.\n9. History of hypersensitivity reaction to any components of the study intervention.\n10. Any other condition that in the investigator's judgment would significantly increase the risks of participation.\n11. Any complication or delayed healing from an excisional procedure that in the investigator's opinion would increase the risks of participation.\n12. Another primary malignancy within the previous 3 years.\n13. History of allogeneic cell or organ transplant.\n14. Requiring systemic steroid therapy higher than the physiologic replacement dose.\n15. Received or will receive a live or attenuated vaccination within 28 days prior to the start of the NMA-LD.\n16. Any active viral, bacterial, or fungal infection requiring ongoing systemic treatment.",
+  "annotations": [
+    {
+      "line": "At least one resectable lesion (solitary or aggregate lesions) for TIL generation.",
+      "type": "UNPARSEABLE",
+      "section": "inclusion"
+    },
+    {
+      "line": "Following tumor resection for TIL generation, the participant will have at least one remaining measurable lesion for response assessment.",
+      "type": "UNPARSEABLE",
+      "section": "inclusion"
+    },
+    {
+      "line": "Acceptable hematologic parameters.",
+      "type": "UNPARSEABLE",
+      "section": "inclusion"
+    },
+    {
+      "line": "Another primary malignancy within the previous 3 years.",
+      "type": "UNPARSEABLE",
+      "section": "exclusion"
+    },
+    {
+      "line": "Requiring systemic steroid therapy higher than the physiologic replacement dose.",
+      "type": "UNPARSEABLE",
+      "section": "exclusion"
+    }
+  ]
+}
