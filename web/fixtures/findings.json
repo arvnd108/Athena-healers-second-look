@@ -1,0 +1,242 @@
+{
+  "f0000000-0000-4000-8000-000000000021": {
+    "id": "f0000000-0000-4000-8000-000000000021",
+    "case_id": "8c1d4e2a-0000-4000-8000-000000000a01",
+    "question_id": "q0000000-0000-4000-8000-000000000002",
+    "question_text": "What documented evidence exists for EGFR T790M in Lung adenocarcinoma?",
+    "claim": "EGFR T790M predicts sensitivity to osimertinib in EGFR-mutant non-small cell lung cancer.",
+    "evidence_class": "documented",
+    "evidence_level": "B",
+    "confidence": "high",
+    "status": "active",
+    "created_at": "2026-02-16T08:31:00Z",
+    "generator_version": "signals.genomics/1",
+    "source": {
+      "kind": "documented",
+      "name": "CIViC",
+      "citation_id": "EID:1409",
+      "citation_url": "https://civicdb.org/evidence/1409"
+    },
+    "assumptions": [
+      {"type": "DrugNotYetTried", "describe": "osimertinib not previously administered", "holds": false}
+    ],
+    "provenance": [
+      {"step": "Alteration observed", "detail": "EGFR T790M, NGS panel, 14 Feb 2026", "url": null},
+      {"step": "Graph match", "detail": "Variant(EGFR T790M) -[:HAS_EVIDENCE]-> Evidence(EID:1409)", "url": null},
+      {"step": "CIViC evidence item", "detail": "Level B — clinical evidence, predictive, sensitivity/response", "url": "https://civicdb.org/evidence/1409"},
+      {"step": "Primary literature", "detail": "Jänne et al., N Engl J Med 2015", "url": "https://pubmed.ncbi.nlm.nih.gov/25923549/"}
+    ],
+    "caveats": [],
+    "decisions": []
+  },
+  "f0000000-0000-4000-8000-000000000031": {
+    "id": "f0000000-0000-4000-8000-000000000031",
+    "case_id": "8c1d4e2a-0000-4000-8000-000000000a01",
+    "question_id": "q0000000-0000-4000-8000-000000000003",
+    "question_text": "Are there recruiting trials matching EGFR T790M?",
+    "claim": "Osimertinib plus savolitinib in EGFR T790M NSCLC (NCT03778229, Phase 2) is RECRUITING on ClinicalTrials.gov.",
+    "evidence_class": "documented",
+    "evidence_level": null,
+    "confidence": "stated",
+    "status": "active",
+    "created_at": "2026-02-16T08:31:00Z",
+    "generator_version": "signals.trials/2",
+    "source": {
+      "kind": "documented",
+      "name": "ClinicalTrials.gov",
+      "citation_id": "NCT03778229",
+      "citation_url": "https://clinicaltrials.gov/study/NCT03778229"
+    },
+    "assumptions": [],
+    "provenance": [
+      {"step": "Alteration observed", "detail": "EGFR T790M, NGS panel, 14 Feb 2026", "url": null},
+      {"step": "Graph match", "detail": "Trial -[:TARGETS_BIOMARKER]-> Gene(EGFR)", "url": null},
+      {"step": "Registry record", "detail": "Status RECRUITING, verified against ClinicalTrials.gov", "url": "https://clinicaltrials.gov/study/NCT03778229"}
+    ],
+    "caveats": [],
+    "decisions": [],
+    "paired_with": "f0000000-0000-4000-8000-000000000032"
+  },
+  "f0000000-0000-4000-8000-000000000032": {
+    "id": "f0000000-0000-4000-8000-000000000032",
+    "case_id": "8c1d4e2a-0000-4000-8000-000000000a01",
+    "question_id": "q0000000-0000-4000-8000-000000000003",
+    "question_text": "Are there recruiting trials matching EGFR T790M?",
+    "claim": "NCT03778229 is needs_verification for this case (3 criteria matched, 2 unresolved, 0 violated).",
+    "evidence_class": "computed",
+    "evidence_level": null,
+    "confidence": "low",
+    "status": "active",
+    "created_at": "2026-02-16T08:31:00Z",
+    "generator_version": "signals.trials/2",
+    "source": {
+      "kind": "computed",
+      "method": "signals.trial_matching.match_trial",
+      "version": "signals.trial_matching/1"
+    },
+    "bucket": "needs_verification",
+    "assumptions": [],
+    "provenance": [
+      {"step": "Registry criteria text", "detail": "Eligibility section as published by the sponsor, 11 lines", "url": null},
+      {"step": "Extraction", "detail": "RuleBasedExtractor (deterministic, offline) — 5 predicates, 0 unparseable", "url": null},
+      {"step": "Predicate evaluation", "detail": "match_trial() against the folded CaseState — no network, no LLM", "url": null}
+    ],
+    "caveats": [
+      "Computed pre-screen over the registry's own criteria text — not an eligibility determination. The trial site decides.",
+      "unresolved: ECOG performance status 0-1",
+      "unresolved: No prior third-generation EGFR TKI",
+      "1 DISEASE_STAGE_REQUIRES criterion cannot be evaluated at all: CaseState records no such field."
+    ],
+    "decisions": [],
+    "paired_with": "f0000000-0000-4000-8000-000000000031"
+  },
+  "f0000000-0000-4000-8000-000000000041": {
+    "id": "f0000000-0000-4000-8000-000000000041",
+    "case_id": "8c1d4e2a-0000-4000-8000-000000000a01",
+    "question_id": "q0000000-0000-4000-8000-000000000004",
+    "question_text": "Does EGFR T790M confer resistance to any component of the current regimen?",
+    "claim": "EGFR residue 790 lies 4.1 Å from the co-crystallised ligand in PDB 4ZAU — within the osimertinib binding pocket.",
+    "evidence_class": "computed",
+    "evidence_level": null,
+    "confidence": "low",
+    "status": "active",
+    "created_at": "2026-02-16T08:31:00Z",
+    "generator_version": "secondlook.proximity/1",
+    "source": {
+      "kind": "computed",
+      "method": "proximity measurement from experimental coordinates",
+      "version": "secondlook.proximity/1"
+    },
+    "assumptions": [],
+    "provenance": [
+      {"step": "Mutation validated", "detail": "EGFR p.Thr790Met against UniProt P00533, reference residue matched", "url": null},
+      {"step": "Structure selected", "detail": "PDB 4ZAU — experimental, pLDDT not applicable", "url": null},
+      {"step": "Distance measured", "detail": "4.1 Å, residue 790 to nearest co-crystallised ligand atom", "url": null}
+    ],
+    "caveats": [
+      "Proximity is a measurement, not a validated classifier. Its pre-committed criterion failed 7/8 on the gold-standard set.",
+      "Distance is measured to whatever ligand was co-crystallised, which is often not the drug in question.",
+      "This is a computational plausibility signal generated by structural prediction tools for research and hypothesis-generation only. It is not clinical evidence, a diagnosis, or a treatment recommendation, and it has not been clinically validated for this mutation. The underlying models predict physical binding/stability changes with limited accuracy and were not designed to predict patient response. These results must be interpreted by a qualified clinician alongside established evidence before any clinical decision. Do not use this output to start, stop, or change any treatment."
+    ],
+    "decisions": []
+  },
+  "f0000000-0000-4000-8000-000000000051": {
+    "id": "f0000000-0000-4000-8000-000000000051",
+    "case_id": "8c1d4e2a-0000-4000-8000-000000000a01",
+    "question_id": "q0000000-0000-4000-8000-000000000005",
+    "question_text": "What does PD-L1 crossing 50.0 imply for treatment options in Lung adenocarcinoma?",
+    "claim": "Pembrolizumab monotherapy is approved in India for NSCLC with PD-L1 TPS ≥ 50% and no EGFR/ALK alteration.",
+    "evidence_class": "regulatory",
+    "evidence_level": null,
+    "confidence": "stated",
+    "status": "active",
+    "created_at": "2026-02-16T08:31:00Z",
+    "generator_version": "signals.access_pathway/1",
+    "source": {
+      "kind": "regulatory",
+      "instrument": "CDSCO import/marketing authorisation — pembrolizumab",
+      "citation_url": "https://cdscoonline.gov.in/CDSCO/Drugs"
+    },
+    "assumptions": [],
+    "provenance": [
+      {"step": "Biomarker crossing", "detail": "PD-L1 35% -> 62% TPS, threshold 50%, IHC 14 Feb 2026", "url": null},
+      {"step": "Instrument", "detail": "CDSCO marketing authorisation, indication text", "url": "https://cdscoonline.gov.in/CDSCO/Drugs"}
+    ],
+    "caveats": [
+      "The label's indication excludes EGFR-altered disease. This case records EGFR L858R and T790M, so the instrument's own criteria are not met — availability is not eligibility.",
+      "Theoretical availability under the instrument is stated separately from any precedent of use in this setting; no precedent is claimed here."
+    ],
+    "decisions": []
+  },
+  "f0000000-0000-4000-8000-000000000061": {
+    "id": "f0000000-0000-4000-8000-000000000061",
+    "case_id": "8c1d4e2a-0000-4000-8000-000000000a01",
+    "question_id": "q0000000-0000-4000-8000-000000000001",
+    "question_text": "What resistance mechanisms are documented for osimertinib in Lung adenocarcinoma?",
+    "claim": "MET amplification co-occurs in roughly 15% of osimertinib-resistant EGFR-mutant NSCLC cohorts.",
+    "evidence_class": "contextual",
+    "evidence_level": null,
+    "confidence": "low",
+    "status": "active",
+    "created_at": "2026-02-16T08:31:00Z",
+    "generator_version": "signals.cohort_context/1",
+    "source": {
+      "kind": "contextual",
+      "name": "Published cohort summary",
+      "citation_url": "https://pubmed.ncbi.nlm.nih.gov/29903880/"
+    },
+    "assumptions": [],
+    "provenance": [
+      {"step": "Cohort statistic", "detail": "Aggregate frequency across published resistance cohorts", "url": "https://pubmed.ncbi.nlm.nih.gov/29903880/"}
+    ],
+    "caveats": [
+      "Cohort background, not a finding about this patient. This case has no MET testing recorded, and a cohort frequency can never drive an option on its own."
+    ],
+    "decisions": []
+  },
+  "f0000000-0000-4000-8000-000000000007": {
+    "id": "f0000000-0000-4000-8000-000000000007",
+    "case_id": "8c1d4e2a-0000-4000-8000-000000000a01",
+    "question_id": "q0000000-0000-4000-8000-000000000101",
+    "question_text": "What documented evidence exists for EGFR L858R in lung adenocarcinoma?",
+    "label": "Finding #7",
+    "claim": "osimertinib-naive, EGFR-TKI candidate",
+    "evidence_class": "documented",
+    "evidence_level": "B",
+    "confidence": "high",
+    "status": "superseded",
+    "created_at": "2026-01-03T11:00:00Z",
+    "generator_version": "signals.genomics/1",
+    "source": {
+      "kind": "documented",
+      "name": "CIViC",
+      "citation_id": "EID:0879",
+      "citation_url": "https://civicdb.org/evidence/879"
+    },
+    "assumptions": [
+      {"type": "NoAlterationIn", "describe": "no known alteration in EGFR", "holds": false}
+    ],
+    "provenance": [
+      {"step": "Alteration observed", "detail": "EGFR L858R, NGS panel, 02 Jan 2026", "url": null},
+      {"step": "CIViC evidence item", "detail": "Level B — predictive, sensitivity/response", "url": "https://civicdb.org/evidence/879"}
+    ],
+    "caveats": [],
+    "decisions": [
+      {"action": "investigating", "reason": "Starting osimertinib first line.", "decided_by": "Dr A. Rao", "decided_at": "2026-01-05T09:12:00Z"}
+    ],
+    "superseded_by": "e1000000-0000-4000-8000-000000000004",
+    "superseded_note": "This finding assumed no known alteration in EGFR. That is no longer true.",
+    "superseded_event_label": "14 Feb sequencing"
+  },
+  "f0000000-0000-4000-8000-000000000011": {
+    "id": "f0000000-0000-4000-8000-000000000011",
+    "case_id": "8c1d4e2a-0000-4000-8000-000000000a01",
+    "question_id": "q0000000-0000-4000-8000-000000000103",
+    "question_text": "What does PD-L1 below 50 imply for treatment options in lung adenocarcinoma?",
+    "label": "Finding #11",
+    "claim": "PD-L1 low; checkpoint monotherapy not indicated",
+    "evidence_class": "regulatory",
+    "evidence_level": null,
+    "confidence": "stated",
+    "status": "superseded",
+    "created_at": "2026-01-03T11:06:00Z",
+    "generator_version": "signals.access_pathway/1",
+    "source": {
+      "kind": "regulatory",
+      "instrument": "CDSCO import/marketing authorisation — pembrolizumab",
+      "citation_url": "https://cdscoonline.gov.in/CDSCO/Drugs"
+    },
+    "assumptions": [
+      {"type": "BiomarkerBelow", "describe": "PD-L1 below 50.0", "holds": false}
+    ],
+    "provenance": [
+      {"step": "Biomarker measured", "detail": "PD-L1 35% TPS, IHC 02 Jan 2026", "url": null},
+      {"step": "Instrument", "detail": "CDSCO marketing authorisation, indication text", "url": "https://cdscoonline.gov.in/CDSCO/Drugs"}
+    ],
+    "caveats": [],
+    "decisions": [],
+    "superseded_by": "e1000000-0000-4000-8000-000000000005",
+    "superseded_note": "This finding assumed PD-L1 below 50.0. That is no longer true.",
+    "superseded_event_label": "14 Feb IHC"
+  }
+}

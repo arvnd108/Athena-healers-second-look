@@ -1,0 +1,77 @@
+{
+  "id": "8c1d4e2a-0000-4000-8000-000000000a01",
+  "label": "Case A — synthetic",
+  "age_years": 61,
+  "cancer_type": "Lung adenocarcinoma",
+  "primary_site": "Lung",
+  "histology": "Adenocarcinoma",
+  "stage": "IV",
+  "doid": "3910",
+  "created_at": "2026-01-02T09:00:00Z",
+  "timeline": [
+    {
+      "id": "e1000000-0000-4000-8000-000000000001",
+      "event_type": "ALTERATION_OBSERVED",
+      "occurred_at": "2026-01-02",
+      "recorded_at": "2026-01-03",
+      "source_document": "NGS report 2026-01-02",
+      "payload": {"gene": "EGFR", "variant": "L858R", "variant_type": "missense", "assay": "NGS panel"}
+    },
+    {
+      "id": "e1000000-0000-4000-8000-000000000002",
+      "event_type": "BIOMARKER_MEASURED",
+      "occurred_at": "2026-01-02",
+      "recorded_at": "2026-01-03",
+      "source_document": "IHC report 2026-01-02",
+      "payload": {"name": "PD-L1", "value": 35.0, "unit": "% TPS"}
+    },
+    {
+      "id": "e1000000-0000-4000-8000-000000000003",
+      "event_type": "TREATMENT_LINE",
+      "occurred_at": "2026-01-05",
+      "recorded_at": "2026-01-05",
+      "source_document": null,
+      "payload": {"regimen": "osimertinib", "line": 1, "action": "started", "reason": null}
+    },
+    {
+      "id": "e1000000-0000-4000-8000-000000000004",
+      "event_type": "ALTERATION_OBSERVED",
+      "occurred_at": "2026-02-14",
+      "recorded_at": "2026-02-16",
+      "source_document": "NGS report 2026-02-14",
+      "payload": {"gene": "EGFR", "variant": "T790M", "variant_type": "missense", "assay": "NGS panel"}
+    },
+    {
+      "id": "e1000000-0000-4000-8000-000000000005",
+      "event_type": "BIOMARKER_MEASURED",
+      "occurred_at": "2026-02-14",
+      "recorded_at": "2026-02-16",
+      "source_document": "IHC report 2026-02-14",
+      "payload": {"name": "PD-L1", "value": 62.0, "unit": "% TPS"}
+    },
+    {
+      "id": "e1000000-0000-4000-8000-000000000006",
+      "event_type": "DISEASE_ASSESSMENT",
+      "occurred_at": "2026-02-14",
+      "recorded_at": "2026-02-16",
+      "source_document": "CT chest/abdomen 2026-02-14",
+      "payload": {"status": "progression", "sites": ["liver", "lung"]}
+    }
+  ],
+  "current_state": {
+    "alterations": [
+      {"gene": "EGFR", "variant": "L858R", "variant_type": "missense", "assay": "NGS panel", "tested_on": "2026-01-02", "event_id": "e1000000-0000-4000-8000-000000000001"},
+      {"gene": "EGFR", "variant": "T790M", "variant_type": "missense", "assay": "NGS panel", "tested_on": "2026-02-14", "event_id": "e1000000-0000-4000-8000-000000000004"}
+    ],
+    "biomarkers": {
+      "PD-L1": {"name": "PD-L1", "value": 62.0, "unit": "% TPS", "measured_on": "2026-02-14", "event_id": "e1000000-0000-4000-8000-000000000005"}
+    },
+    "treatments": [
+      {"regimen": "osimertinib", "line": 1, "action": "started", "reason": null, "event_id": "e1000000-0000-4000-8000-000000000003"}
+    ],
+    "assessments": [
+      {"status": "progression", "sites": ["liver", "lung"], "assessed_on": "2026-02-14", "event_id": "e1000000-0000-4000-8000-000000000006"}
+    ],
+    "clinical_questions": []
+  }
+}
