@@ -69,6 +69,18 @@ There is also a guard on the guard: a test asserts the budget is measured
 against a **non-empty** page, so the check cannot start passing because the
 renderer began producing nothing.
 
+### What is doing the serving
+
+The numbers above are the *rendered output*. The pages are produced by plain
+functions, so anything can serve them — the API layer once Subsystem L exists,
+a static export, or the small harness bundled for development.
+
+That harness is **development and demo only**: no authentication, no TLS,
+loopback by default. It is not a deployment target, and nothing in this budget
+should be read as clearing it for one. Issue #60 tracks the access control that
+would be required first, and it exists because someone will eventually point one
+of these at a non-loopback interface.
+
 ## Client bundle — Dashboard and Research Queue
 
 These two are interactive and stay a client app, per `IMPLEMENTATION_PLAN.md`
