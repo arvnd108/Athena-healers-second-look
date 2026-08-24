@@ -1,0 +1,33 @@
+{
+  "registry_id": "NCT06299163",
+  "source": "ClinicalTrials.gov v2",
+  "note": "Real registry text, fetched from the ClinicalTrials.gov v2 API. Annotations were read by hand against the source, not taken from extractor output. criteria_text is the complete eligibility section so C3 sees every line; the annotated lines are a seeded random sample (see docs/trial-extraction-validation-plan.md, Corpus).",
+  "criteria_text": "Inclusion Criteria:\n\n* Patients with histologically confirmed, advanced-stage protocol-specified solid tumors.\n* Confirmed ROR1 tumor expression.\n* Patients who have undergone at least one prior systemic therapy and have radiologically or clinically determined progressive disease during or after most recent line of therapy, and for whom no further standard therapy is available, or who are intolerable or have medical contraindications to standard therapy.\n\nExclusion Criteria:\n\n* Prior treatment with any agent targeting ROR1 or prior treatment with a CD3 T-cell engaging therapy.\n* Prior treatment with chimeric antigen receptor (CAR) cell therapy within 90 days prior to first dose of NM32-2668.\n* Systemic anti-neoplastic therapy within five half-lives or 21 days, whichever is shorter, prior to first dose of NM32-2668.\n* Wide-field radiotherapy (\\> 30% of marrow-bearing bones) within 28 days, or focal radiation for analgesic purpose or for lytic lesions at risk of fracture within 14 days prior to first dose of NM32-2668, or no recovery from side effects of such prior interventions.",
+  "annotations": [
+    {
+      "line": "Patients with histologically confirmed, advanced-stage protocol-specified solid tumors.",
+      "type": "UNPARSEABLE",
+      "section": "inclusion"
+    },
+    {
+      "line": "Patients who have undergone at least one prior systemic therapy and have radiologically or clinically determined progressive disease during or after most recent line of therapy, and for whom no further standard therapy is available, or who are intolerable or have medical contraindications to standard therapy.",
+      "type": "UNPARSEABLE",
+      "section": "inclusion"
+    },
+    {
+      "line": "Prior treatment with any agent targeting ROR1 or prior treatment with a CD3 T-cell engaging therapy.",
+      "type": "PRIOR_THERAPY_EXCLUDES",
+      "section": "exclusion"
+    },
+    {
+      "line": "Prior treatment with chimeric antigen receptor (CAR) cell therapy within 90 days prior to first dose of NM32-2668.",
+      "type": "PRIOR_THERAPY_EXCLUDES",
+      "section": "exclusion"
+    },
+    {
+      "line": "Systemic anti-neoplastic therapy within five half-lives or 21 days, whichever is shorter, prior to first dose of NM32-2668.",
+      "type": "UNPARSEABLE",
+      "section": "exclusion"
+    }
+  ]
+}

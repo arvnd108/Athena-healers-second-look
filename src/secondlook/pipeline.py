@@ -424,27 +424,43 @@ def measure_proximity(structure: StructureResult, position: int | None) -> Proxi
     """
     distance = None
     ligand_id = None
+    protomer_distances: dict[str, float] = {}
     if position is not None and structure.pdb_text:
         from secondlook.vina_dock import (
-            NoBindingSiteError,
+            chains_with_ligand,
+            chains_with_residue,
             extract_chain,
             residue_ligand_distance,
-            select_docking_chain,
         )
 
-        try:
-            chain = select_docking_chain(structure.pdb_text, position)
-        except NoBindingSiteError:
-            chain = None
-        if chain is not None:
-            distance, ligand_id = residue_ligand_distance(
+        # Measure in EVERY chain holding both the residue and a ligand, not just
+        # the one the docking chain-selector returns.
+        #
+        # A crystal often contains several copies of the protein and they do not
+        # always agree: 8C7X puts BRAF V600 12.2 A from the ligand in chain A and
+        # 7.2 A in chain B. Measuring only the selected chain reported whichever
+        # copy a rule written for docking happened to pick, and recorded nothing
+        # about the disagreement -- so a number that flips `distant` into
+        # `pocket_adjacent` depending on chain ordering read as a settled fact.
+        candidates = sorted(
+            set(chains_with_residue(structure.pdb_text, position))
+            & set(chains_with_ligand(structure.pdb_text))
+        )
+        for chain in candidates:
+            chain_distance, chain_ligand = residue_ligand_distance(
                 extract_chain(structure.pdb_text, chain), position
             )
+            if chain_distance is None:
+                continue
+            protomer_distances[chain] = chain_distance
+            if distance is None or chain_distance < distance:
+                distance, ligand_id = chain_distance, chain_ligand
     return build_proximity_signal(
         distance,
         structure_id=structure.id,
         structure_source=structure.source,
         measured_to_ligand=ligand_id,
+        protomer_distances=protomer_distances,
     )
 
 
